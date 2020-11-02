@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <header class="w3-container">
+        <h2>{{ title }}</h2>
+    </header>
+    <div class="w3-container">
+        <object data="{{ img_data }}" type="image/svg+xml"></object>
+        <br/>
+        {{ content }}
+    </div>
+{% endblock %}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
+    <!--<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />-->
+    <title>{% block title %}{% endblock %}</title>
+    {% endblock %}
+</head>
+<body>
+    <header class="w3-container w3-dark-grey">
+        <h1>ROS Web GUI</h1>
+    </header>
+    <div class="w3-container" style="padding: 0;">
+        <div class="w3-bar w3-light-grey">
+            <a class="w3-bar-item w3-button {% if active_menu_item == 'home' %} w3-grey {% endif%}" href="/index.html"><h4>Overview</h4></a>
+            <div class="w3-dropdown-hover">
+                <button class="w3-button {% if active_menu_item == 'node' %} w3-grey {% endif%}"><h4>Nodes</h4></button>
+                <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                    {% for item in nav_node_items %}
+                        <a class="w3-bar-item w3-button {% if item.active %} w3-grey {% endif%}" href="{{ item.href }}">{{ item.caption }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="w3-dropdown-hover">
+                <button class="w3-button {% if active_menu_item == 'topic' %} w3-grey {% endif%}"><h4>Topics</h4></button>
+                <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                    {% for item in nav_topic_items %}
+                        <a class="w3-bar-item w3-button {% if item.active %} w3-grey {% endif%}" href="{{ item.href }}">{{ item.caption }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="w3-dropdown-hover">
+                <button class="w3-button {% if active_menu_item == 'service' %} w3-grey {% endif%}"><h4>Services</h4></button>
+                <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                    {% for item in nav_service_items %}
+                        <a class="w3-bar-item w3-button {% if item.active %} w3-grey {% endif%}" href="{{ item.href }}">{{ item.caption }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            </ul>
+        </div>
+        <div id="content">{% block content %}{% endblock %}</div>
+    </div>
+</body>
+</html>
