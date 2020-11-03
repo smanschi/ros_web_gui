@@ -8,7 +8,7 @@ def create_app(test_config=None):
     import rosservice
     import rostopic
     import socket
-    from . import menu, node, service
+    from . import menu, node, param, service, topic
     from io import BytesIO
 
     app = Flask(__name__)
@@ -16,6 +16,7 @@ def create_app(test_config=None):
     app.register_blueprint(node.bp)
     app.register_blueprint(service.bp)
     app.register_blueprint(topic.bp)
+    app.register_blueprint(param.bp)
 
     def get_graph(data):
         graph = pgv.AGraph(directed=True, forcelabels=True)

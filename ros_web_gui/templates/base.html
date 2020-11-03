@@ -31,6 +31,14 @@
                 </div>
             </div>
             <div class="w3-dropdown-hover">
+                <button class="w3-button {% if active_menu_item == 'param' %} w3-grey {% endif%}"><h4>Parameters</h4></button>
+                <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                    {% for item in nav_param_items %}
+                        <a class="w3-bar-item w3-button {% if item.active %} w3-grey {% endif%}" href="{{ item.href }}">{{ item.caption }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="w3-dropdown-hover">
                 <button class="w3-button {% if active_menu_item == 'service' %} w3-grey {% endif%}"><h4>Services</h4></button>
                 <div class="w3-dropdown-content w3-bar-block w3-card-4">
                     {% for item in nav_service_items %}
@@ -40,7 +48,14 @@
             </div>
             </ul>
         </div>
-        <div id="content" style="overflow-x: auto;">{% block content %}{% endblock %}</div>
+        <div id="content" style="overflow-x: auto;">
+            {% block content %}
+            <header class="w3-container">
+                <h2>{{ title }}</h2>
+            </header>
+            {{ content }}
+            {% endblock %}
+        </div>
     </div>
 </body>
 </html>
