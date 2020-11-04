@@ -67,12 +67,12 @@ def get_graph(data, node_name):
             for e in data['pubs']:
                 if e['topic'] == d['topic']:
                     for pub in e['publisher']:
+                        subnode_id = 'sub_pub_' + pub
                         if pub not in node_names:
-                            subnode_id = 'sub_pub_' + pub
                             subnode_url = url_for('node.get_node_info', name=pub)
                             graph.add_node(subnode_id, label=pub, shape='oval', URL=subnode_url, target='_top')
-                            graph.add_edge(subnode_id, topic_id)
                             node_names.add(pub)
+                        graph.add_edge(subnode_id, topic_id)
 
     # Add topics which the node publishes
     node_names.clear()
@@ -87,12 +87,12 @@ def get_graph(data, node_name):
             for e in data['subs']:
                 if e['topic'] == d['topic']:
                     for sub in e['subscriber']:
+                        subnode_id = 'pub_sub_' + sub
                         if sub not in node_names:
-                            subnode_id = 'pub_sub_' + sub
                             subnode_url = url_for('node.get_node_info', name=sub)
                             graph.add_node(subnode_id, label=sub, shape='oval', URL=subnode_url, target='_top')
-                            graph.add_edge(topic_id, subnode_id)
                             node_names.add(sub)
+                        graph.add_edge(topic_id, subnode_id)
 
     return graph
 
