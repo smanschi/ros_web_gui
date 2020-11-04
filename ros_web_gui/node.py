@@ -95,8 +95,27 @@ def get_graph(data, node_name):
                         graph.add_edge(topic_id, subnode_id)
 
     return graph
+    
+@bp.route('/')
+def get_node_overview():
+    # Get info about nodes
+    data = ros.get_info()
 
-@bp.route('/<path:name>', methods=('GET', 'POST'))
+    # Get menu items
+    menu_items = menu.get_items(data)
+
+    # Iterate over nodes
+    content = ''
+    items = menu_items['nav_node_items']
+
+    # Return rendered template
+    return render_template('base_with_list.html', title=f'List of Nodes',
+                            active_menu_item='node',
+                            content=content,
+                            items=items,
+                            **menu_items)    
+
+@bp.route('/<path:name>')
 def get_node_info(name):
     # Check if a svg representation should be returned
     generate_svg = False 

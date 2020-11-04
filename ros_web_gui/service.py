@@ -24,7 +24,26 @@ def get_graph(data, service_name):
 
     return graph
 
-@bp.route('/<path:name>', methods=('GET', 'POST'))
+@bp.route('/')
+def get_node_overview():
+    # Get info about nodes
+    data = ros.get_info()
+
+    # Get menu items
+    menu_items = menu.get_items(data)
+
+    # Iterate over nodes
+    content = ''
+    items = menu_items['nav_service_items']
+
+    # Return rendered template
+    return render_template('base_with_list.html', title=f'List of Services',
+                            active_menu_item='service',
+                            content=content,
+                            items=items,
+                            **menu_items)   
+
+@bp.route('/<path:name>')
 def get_service_info(name):
     # Check if a svg representation should be returned
     generate_svg = False 

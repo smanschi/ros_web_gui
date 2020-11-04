@@ -8,8 +8,11 @@
         <h2>{{ title }}</h2>
     </header>
     <div class="w3-container">
-        <object data="{{ img_data }}" type="image/svg+xml"></object>
-        <br/>
         {{ content }}
+        <ul style="list-style-type:none; padding:0; margin: 0;">
+            {% for item in items %}
+            <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
+            {% endfor %}
+        </ul>
     </div>
 {% endblock %}

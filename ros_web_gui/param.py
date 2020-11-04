@@ -11,8 +11,7 @@ import yaml
 
 bp = Blueprint('param', __name__, url_prefix='/param')
 
-@bp.route('/<path:name>', methods=('GET', 'POST'))
-def get_param_info(name):
+def get_info(name):
     if not name.startswith('/'):
         name = '/' + name
 
@@ -43,4 +42,12 @@ def get_param_info(name):
                             active_menu_item='param',
                             content=content,
                             **menu.get_items(data, active_item=url))
-                            
+
+@bp.route('/')
+def get_default_info():
+    return get_info('/')
+
+@bp.route('/<path:name>')
+def get_param_info(name):
+    return get_info(name)
+    

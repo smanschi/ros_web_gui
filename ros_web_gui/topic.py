@@ -45,7 +45,26 @@ def get_graph(data, topic):
 
     return graph
 
-@bp.route('/<path:name>', methods=('GET', 'POST'))
+@bp.route('/')
+def get_topic_overview():
+    # Get info about nodes
+    data = ros.get_info()
+
+    # Get menu items
+    menu_items = menu.get_items(data)
+
+    # Iterate over nodes
+    content = ''
+    items = menu_items['nav_topic_items']
+
+    # Return rendered template
+    return render_template('base_with_list.html', title=f'List of Topics',
+                            active_menu_item='topic',
+                            content=content,
+                            items=items,
+                            **menu_items)   
+
+@bp.route('/<path:name>')
 def get_topic_info(name):
     # Check if a svg representation should be returned
     generate_svg = False 
