@@ -11,7 +11,27 @@ import yaml
 
 bp = Blueprint('param', __name__, url_prefix='/param')
 
-def get_info(name):
+@bp.route('/')
+def get_param_overview():
+    # Get info about nodes
+    data = ros.get_info()
+
+    # Get menu items
+    menu_items = menu.get_items(data)
+
+    # Iterate over nodes
+    content = ''
+    items = menu_items['nav_param_items']
+
+    # Return rendered template
+    return render_template('base_with_list.html', title=f'List of Parameters',
+                            active_menu_item='param',
+                            content=content,
+                            items=items,
+                            **menu_items) 
+
+@bp.route('/<path:name>')
+def get_param_info(name):
     if not name.startswith('/'):
         name = '/' + name
 
@@ -42,12 +62,4 @@ def get_info(name):
                             active_menu_item='param',
                             content=content,
                             **menu.get_items(data, active_item=url))
-
-@bp.route('/')
-def get_default_info():
-    return get_info('/')
-
-@bp.route('/<path:name>')
-def get_param_info(name):
-    return get_info(name)
-    
+                            

@@ -25,7 +25,7 @@ def get_graph(data, service_name):
     return graph
 
 @bp.route('/')
-def get_node_overview():
+def get_service_overview():
     # Get info about nodes
     data = ros.get_info()
 
