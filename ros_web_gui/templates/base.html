@@ -3,6 +3,9 @@
 <head>
     {% block head %}
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/styles/atom-one-light.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.3.2/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <!--<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />-->
     <title>{% block title %}{{ page_title|default('ROS Web GUI') }}{% endblock %}</title>
     {% endblock %}
