@@ -11,18 +11,21 @@ import yaml
 
 bp = Blueprint('param', __name__, url_prefix='/param')
 
-def get_text(content):
+def get_text(content, namespace='/'):
     buff = ''
     if type(content) == list:
-        for ele in content:
-            buff += get_text(ele)
+        for idx, ele in enumerate(content):
+            buff += get_text(ele, namespace + f'[{idx}]')
     elif type(content) == dict:
         for key, val in content.items():
-            buff += f'/{key}'
             if type(val) is not dict:
                 buff += '<br />\n'
-            buff += get_text(val)
+                new_namespace = namespace + f'{key}'
+            else:
+                new_namespace = namespace + f'{key}/'
+            buff += get_text(val, new_namespace)
     else:
+        buff += f'{namespace}<br />'
         if type(content) == str and len(content) > 5 and content[:5] == '<?xml':
             buff +=  f'<pre style="display: inline-block"><code class="html">{escape(content)}</code></pre><br />\n'
         else:
@@ -37,7 +40,7 @@ def get_param(name):
         content = f'Could net get value of {name} from parameter server'
 
     # Type handling
-    content = get_text(content)
+    content = get_text(content, namespace=name)
 
     # Format param info
     content = Markup('<div class="w3-container">' + content + '</div>')
