@@ -20,6 +20,7 @@ def get_info():
         param_names = rosparam.list_params('')
     except rosparam.RosParamIOException:
         print('Could not fetch parameter names from server', file=sys.stdout)
+    param_names = sorted(set(['/'.join(param.split('/')[:2]) for param in param_names]))
 
     return {
         'pubs': [{'topic': s[0], 'publisher':  s[1], 'type': rostopic.get_topic_type(s[0])[0]} for s in state[0]],

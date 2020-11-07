@@ -3,6 +3,7 @@ from . import menu, ros
 import base64
 from io import BytesIO, StringIO
 import pygraphviz as pgv
+import rosgraph
 import rosparam
 import socket
 import sys
@@ -39,10 +40,16 @@ def get_param(name):
     try:
         content = rosparam.get_param(name)
     except rosparam.RosParamIOException:
-        content = f'Could net get value of {name} from parameter server'
+        #content = f'Could net get value of {name} from parameter server'
+        return None
+    except rosgraph.masterapi.MasterError:
+        return None
+
+    # Ensure the namespace ends with a slash
+    namespace = name if name[-1] == '/' else name + '/'
 
     # Type handling
-    content = get_text(content, namespace=name)
+    content = get_text(content, namespace=namespace)
 
     # Format param info
     content = Markup('<div class="w3-container">' + content + '</div>')

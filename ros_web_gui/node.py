@@ -1,5 +1,5 @@
 from flask import Blueprint, Markup, Response, render_template, url_for
-from . import menu, ros
+from . import menu, param, ros
 import base64
 from io import BytesIO, StringIO
 import pygraphviz as pgv
@@ -139,12 +139,12 @@ def get_node_info(name):
 
         return Response(svg, mimetype='image/svg+xml')
     else:
-        # Get node info
-        #content = get_node_info_description(data, name)
+        # Assemble content
         content = ''
-
-        # Format node info
-        content = Markup(content.replace('\n', '<br/>'))
+        param_content = param.get_param(name)
+        if param_content is not None:
+            content += Markup('<h2>Parameter</h2>')
+            content += param.get_param(name)
 
         # Link to svg
         url = url_for('node.get_node_info', name=name)
