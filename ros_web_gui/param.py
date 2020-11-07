@@ -15,11 +15,13 @@ def get_text(content, namespace='/'):
     buff = ''
     if type(content) == list:
         for idx, ele in enumerate(content):
-            buff += get_text(ele, namespace + f'[{idx}]')
+            if type(ele) is dict:
+                buff += get_text(ele, namespace + f'[{idx}]/')
+            else:
+                buff += get_text(ele, namespace + f'[{idx}]')
     elif type(content) == dict:
         for key, val in content.items():
             if type(val) is not dict:
-                buff += '<br />\n'
                 new_namespace = namespace + f'{key}'
             else:
                 new_namespace = namespace + f'{key}/'
