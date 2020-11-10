@@ -4,6 +4,7 @@ from . import menu, node, service, topic, ros
 def create_app(test_config=None):
     import pygraphviz as pgv
     import rosgraph
+    import rospy
     import rosnode
     import rosservice
     import rostopic
@@ -17,6 +18,8 @@ def create_app(test_config=None):
     app.register_blueprint(service.bp)
     app.register_blueprint(topic.bp)
     app.register_blueprint(param.bp)
+
+    rospy.init_node('ros_web_gui')
 
     def get_graph(data):
         graph = pgv.AGraph(directed=True, forcelabels=True)
