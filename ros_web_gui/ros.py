@@ -6,6 +6,7 @@ import rospy
 import rostopic
 import socket
 import sys
+import _thread
 
 def get_info():
     # get master
@@ -103,7 +104,7 @@ class Node:
         self.__pubs[pub.name] = pub
 
     def addService(self, srv):
-        self.__pubs[srv.name] = srv
+        self.__srvs[srv.name] = srv
 
 
 class Service:
@@ -152,6 +153,21 @@ class ROSApi:
     def params(self):
         return self.__params
 
+    def get_topic(self, name):
+        if name in self.__topics:
+            return self.__topics[name]
+        return None
+
+    def get_node(self, name):
+        if name in self.__nodes:
+            return self.__nodes[name]
+        return None
+
+    def get_service(self, name):
+        if name in self.__services:
+            return self.__services[name]
+        return None
+
     def update(self):
         # get master
         master = rosgraph.Master('rosnode')
@@ -162,12 +178,11 @@ class ROSApi:
         except socket.error:
             raise rosnode.ROSNodeIOException("Unable to communicate with master!")
         
-        param_names = []
         try:
             param_names = rosparam.list_params('')
         except rosparam.RosParamIOException:
             print('Could not fetch parameter names from server', file=sys.stdout)
-        param_names = sorted(set(['/'.join(param.split('/')[:2]) for param in param_names]))
+        self.__params = sorted(set(['/'.join(param.split('/')[:2]) for param in param_names]))
 
         # Iterate over publisher topics and create nodes and topics if necessary
         for s in state[0]:
@@ -199,14 +214,9 @@ class ROSApi:
             for node_name in s[1]:
                 if node_name not in self.__nodes:
                     self.__nodes[node_name] = Node(node_name)
-                self.__services[topic_name].addProvider(self.__nodes[node_name])
-                self.__nodes[node_name].addService(self.__services[topic_name])
+                self.__services[service_name].addProvider(self.__nodes[node_name])
+                self.__nodes[node_name].addService(self.__services[service_name])
 
-        return {
-            'pubs':   [{'topic': s[0], 'publisher':  s[1], 'type': rostopic.get_topic_type(s[0])[0]} for s in state[0]],
-            'subs':   [{'topic': s[0], 'subscriber': s[1], 'type': rostopic.get_topic_type(s[0])[0]} for s in state[1]],
-            'srvs':   [{'topic': s[0], 'provider':   s[1], 'type': rostopic.get_topic_type(s[0])[0]} for s in state[2]],
-            'params': [{'name': s, 'type': 'unknown'} for s in param_names]
-        }
-
-api = ROSApi()
+ros = ROSApi()
+#rospy.init_node('ros_web_gui')
+#_thread.start_new_thread(rospy.spin, ()) 

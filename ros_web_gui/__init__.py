@@ -1,5 +1,6 @@
 from flask import Flask, Markup, Response, render_template, url_for
-from . import menu, node, service, topic, ros
+from . import menu, node, service, topic, param
+from .ros import ros
 
 def create_app(test_config=None):
     import pygraphviz as pgv
@@ -9,7 +10,8 @@ def create_app(test_config=None):
     import rosservice
     import rostopic
     import socket
-    from . import menu, node, param, service, topic
+    from . import menu
+    from .ros import ros
     from io import BytesIO
 
     app = Flask(__name__)
@@ -21,47 +23,37 @@ def create_app(test_config=None):
 
     rospy.init_node('ros_web_gui')
 
-    def get_graph(data):
+    def get_graph():
         graph = pgv.AGraph(directed=True, forcelabels=True)
         node_names = set()
 
-        # Add subscribers
-        for d in data['subs']:
-            topic_id = 'topic_' + d['topic']
-            node_url = url_for('topic.get_topic_info', name=d['topic'])
-            node_label = f"{d['topic']}\\n{d['type']}"
+        # Add one graph node for each ros node
+        for node_name in ros.nodes:
+            node_url = url_for('node.get_node_info', name=node_name)
+            graph.add_node(node_name, shape='oval', URL=node_url, target='_top')
+            
+        # Iterate over topics, add a graph node for each topic and draw edges to subscribers and publishers
+        for topic_name, topic in ros.topics.items():
+            topic_id = 'topic_' + topic_name
+            node_url = url_for('topic.get_topic_info', name=topic_name)
+            node_label = f"{topic_name}\\n{topic.type}"
             graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
-            node_names.add(topic_id)
 
-            for sub in d['subscriber']:
-                if sub not in node_names:
-                    node_url = url_for('node.get_node_info', name=sub)
-                    graph.add_node(sub, shape='oval', URL=node_url, target='_top')
-                    node_names.add(sub)
-                graph.add_edge(topic_id, sub)
+            for node_name in topic.publishers:
+                graph.add_edge(node_name, topic_id)
 
-        # Add publishers
-        for d in data['pubs']:
-            topic_id = 'topic_' + d['topic']
-            if topic_id not in node_names:
-                node_url = url_for('topic.get_topic_info', name=d['topic'])
-                node_label = f"{d['topic']}\\n{d['type']}"
-                graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
-                node_names.add(topic_id)
-
-            for pub in d['publisher']:
-                if pub not in node_names:
-                    node_url = url_for('node.get_node_info', name=pub)
-                    graph.add_node(pub, shape='oval', URL=node_url, target='_top')
-                    node_names.add(pub)
-                graph.add_edge(pub, topic_id)
+            for node_name in topic.subscribers:
+                graph.add_edge(topic_id, node_name)
 
         return graph
 
     @app.route('/graph.svg')
     def get_graph_svg():
+        # Update ros api
+        ros.update()
+
         # Generate graph
-        graph = get_graph(ros.get_info())
+        graph = get_graph()
         img_stream = BytesIO()
         graph.draw(path=img_stream, format='svg', prog='dot')
         svg = img_stream.getvalue().decode('utf-8')
@@ -71,11 +63,11 @@ def create_app(test_config=None):
     @app.route('/')
     @app.route('/index.html')
     def get_main():
+        # Update ros api
+        ros.update()
+
         # Empty content at the moment
         content = ''
-
-        # Get info
-        data = ros.get_info()
 
         # Link to svg
         img_data = 'graph.svg'
@@ -83,7 +75,7 @@ def create_app(test_config=None):
         # Render and return template
         return render_template('base_with_svg.html', title='Overview',
                                active_menu_item='home',
-                               content=content, **menu.get_items(data),
+                               content=content, **menu.get_items(),
                                img_data=img_data)
 
     return app

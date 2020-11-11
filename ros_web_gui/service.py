@@ -1,5 +1,6 @@
 from flask import Blueprint, Markup, Response, render_template, url_for
-from . import menu, ros
+from . import menu
+from .ros import ros
 from io import BytesIO, StringIO
 import pygraphviz as pgv
 import rosservice
@@ -7,30 +8,27 @@ import sys
 
 bp = Blueprint('service', __name__, url_prefix='/service')
 
-def get_graph(data, service_name):    
+def get_graph(service):    
     graph = pgv.AGraph(directed=True, forcelabels=True, stylesheet='https://www.w3schools.com/w3css/4/w3.css')
     
-    # Add publishers of service
-    for d in data['srvs']:
-        if service_name == d['topic']:
-            service_id = 'srv_' + d['topic']
-            node_label = f"{d['topic']}\\n{d['type']}"
-            graph.add_node(service_id, label=node_label, shape='box')
-            for provider in d['provider']:
-                subnode_id = 'prov_' + provider
-                subnode_url = url_for('node.get_node_info', name=provider)
-                graph.add_node(subnode_id, label=provider, shape='oval', URL=subnode_url, target='_top')
-                graph.add_edge(subnode_id, service_id)
+    node_label = f"{service.name}\\n{service.type}"
+    node_id = "srv_" + service.name
+    graph.add_node(node_id, label=node_label, shape='box')
+
+    for _, node in service.providers.items():
+        node_url = url_for('node.get_node_info', name=node.name)
+        graph.add_node(node.name, shape='oval', URL=node_url, target='_top')
+        graph.add_edge(node.name, node_id)
 
     return graph
 
 @bp.route('/')
 def get_service_overview():
-    # Get info about nodes
-    data = ros.get_info()
+    # Update ros api
+    ros.update()
 
     # Get menu items
-    menu_items = menu.get_items(data)
+    menu_items = menu.get_items()
 
     # Iterate over nodes
     content = ''
@@ -54,12 +52,15 @@ def get_service_info(name):
     if not name.startswith('/'):
         name = '/' + name
 
-    # Get info about node
-    data = ros.get_info()
+    # Update ros api
+    ros.update()
+
+    # Get service
+    service = ros.get_service(name)
 
     if generate_svg is True:
         # Generate graph
-        graph = get_graph(data, name)
+        graph = get_graph(service)
         img_stream = BytesIO()
         graph.draw(path=img_stream, format='svg', prog='dot')
         svg = img_stream.getvalue().decode('utf-8')
@@ -87,7 +88,7 @@ def get_service_info(name):
         return render_template('base_with_svg.html', title=f'Service {name}',
                                active_menu_item='service',
                                content=content,
-                               **menu.get_items(data, active_item=url),
+                               **menu.get_items(active_item=url),
                                img_data=img_data)
                                #img_data=img_stream)
                                #img_data=urllib.parse.quote(img_stream.rstrip('\n')))

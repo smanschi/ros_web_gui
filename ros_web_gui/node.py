@@ -1,108 +1,66 @@
 from flask import Blueprint, Markup, Response, render_template, url_for
-from . import menu, param, ros
+from . import menu, param
+from .ros import *
 import base64
 from io import BytesIO, StringIO
 import pygraphviz as pgv
-import rosgraph
-import rosgraph.names
-import rosnode
 import socket
 import sys
 import urllib
 
 bp = Blueprint('node', __name__, url_prefix='/node')
 
-def get_node_info_description(data, node):
-    buff = ""
 
-    num_pubs = 0
-    for d in data['pubs']:
-        if node in d['publisher']:
-            if num_pubs == 0:
-                buff += "\nPublications: \n"
-            buff += f"* {d['topic']} [{d['type']}]\n"
-            num_pubs += 1
-    if num_pubs == 0:
-        buff += "\nPublications: None\n"
-
-    num_subs = 0
-    for d in data['subs']:
-        if node in d['subscriber']:
-            if num_subs == 0:
-                buff += "\nSubscriptions: \n"
-            buff += f"* {d['topic']} [{d['type']}]\n"
-            num_subs += 1
-    if num_subs == 0:
-        buff += "\nSubscriptions: None\n"
-
-    num_srvs = 0
-    for d in data['srvs']:
-        if node in d['provider']:
-            if num_srvs == 0:
-                buff += "\nServices: \n"
-            buff += f"* {d['topic']} [{d['type']}]\n"
-            num_srvs += 1
-    if num_srvs == 0:
-        buff += "\nServices: None\n"
-        
-    return buff
-
-def get_graph(data, node_name):    
+def get_graph(node):    
     graph = pgv.AGraph(directed=True, forcelabels=True, stylesheet='https://www.w3schools.com/w3css/4/w3.css')
 
      # Add node
     #node_url = url_for('node.get_node_info', name=node_name)
-    graph.add_node(node_name, **{'shape': 'oval', 'class': 'w3-orange w3-hover-red'})#, URL=node_url, target='_top')
+    graph.add_node(node.name, **{'shape': 'oval', 'class': 'w3-orange w3-hover-red'})#, URL=node_url, target='_top')
 
     # Add topics to which the node subscribes
     node_names = set()
-    for d in data['subs']:
-        if node_name in d['subscriber']:
-            topic_id = 'topic_sub_' + d['topic']
-            node_url = url_for('topic.get_topic_info', name=d['topic'])
-            node_label = f"{d['topic']}\\n{d['type']}"
-            graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
-            graph.add_edge(topic_id, node_name)
+    for topic_name, topic in node.subscriptions.items():
+        topic_id = 'topic_sub_' + topic_name
+        node_url = url_for('topic.get_topic_info', name=topic_name)
+        node_label = f"{topic_name}\\n{topic.type}"
+        graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
+        graph.add_edge(topic_id, node.name)
 
-            for e in data['pubs']:
-                if e['topic'] == d['topic']:
-                    for pub in e['publisher']:
-                        subnode_id = 'sub_pub_' + pub
-                        if pub not in node_names:
-                            subnode_url = url_for('node.get_node_info', name=pub)
-                            graph.add_node(subnode_id, label=pub, shape='oval', URL=subnode_url, target='_top')
-                            node_names.add(pub)
-                        graph.add_edge(subnode_id, topic_id)
+        for pub_name in topic.publishers:
+            subnode_id = 'pub_' + pub_name
+            if pub_name not in node_names:
+                subnode_url = url_for('node.get_node_info', name=pub_name)
+                graph.add_node(subnode_id, label=pub_name, shape='oval', URL=subnode_url, target='_top')
+                node_names.add(pub_name)
+            graph.add_edge(subnode_id, topic_id)
 
     # Add topics which the node publishes
     node_names.clear()
-    for d in data['pubs']:
-        if node_name in d['publisher']:
-            topic_id = 'topic_pub_' + d['topic']
-            node_url = url_for('topic.get_topic_info', name=d['topic'])
-            node_label = f"{d['topic']}\\n{d['type']}"
-            graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
-            graph.add_edge(node_name, topic_id)
+    for topic_name, topic in node.publications.items():
+        topic_id = 'topic_pub_' + topic_name
+        node_url = url_for('topic.get_topic_info', name=topic_name)
+        node_label = f"{topic_name}\\n{topic.type}"
+        graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
+        graph.add_edge(node.name, topic_id)
 
-            for e in data['subs']:
-                if e['topic'] == d['topic']:
-                    for sub in e['subscriber']:
-                        subnode_id = 'pub_sub_' + sub
-                        if sub not in node_names:
-                            subnode_url = url_for('node.get_node_info', name=sub)
-                            graph.add_node(subnode_id, label=sub, shape='oval', URL=subnode_url, target='_top')
-                            node_names.add(sub)
-                        graph.add_edge(topic_id, subnode_id)
+        for sub_name in topic.subscribers:
+            subnode_id = 'sub_' + sub_name
+            if sub_name not in node_names:
+                subnode_url = url_for('node.get_node_info', name=sub_name)
+                graph.add_node(subnode_id, label=sub_name, shape='oval', URL=subnode_url, target='_top')
+                node_names.add(sub_name)
+            graph.add_edge(topic_id, subnode_id)
 
     return graph
     
 @bp.route('/')
 def get_node_overview():
-    # Get info about nodes
-    data = ros.get_info()
+    # Update ros api
+    ros.update()
 
     # Get menu items
-    menu_items = menu.get_items(data)
+    menu_items = menu.get_items()
 
     # Iterate over nodes
     content = ''
@@ -126,12 +84,15 @@ def get_node_info(name):
     if not name.startswith('/'):
         name = '/' + name
 
-    # Get info about node
-    data = ros.get_info()
+    # Update ros api
+    ros.update()
+
+    # Get node
+    node = ros.get_node(name)
 
     if generate_svg is True:
         # Generate graph
-        graph = get_graph(data, name)
+        graph = get_graph(node)
         img_stream = BytesIO()
         graph.draw(path=img_stream, format='svg', prog='dot')
         svg = img_stream.getvalue().decode('utf-8')
@@ -166,7 +127,7 @@ def get_node_info(name):
         return render_template('base_with_svg.html', title=f'Node {name}',
                                active_menu_item='node',
                                content=content,
-                               **menu.get_items(data, active_item=url),
+                               **menu.get_items(active_item=url),
                                img_data=img_data)
                                #img_data=img_stream)
                                #img_data=urllib.parse.quote(img_stream.rstrip('\n')))

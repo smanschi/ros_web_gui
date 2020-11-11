@@ -1,5 +1,6 @@
 from flask import Blueprint, Markup, Response, escape, render_template, url_for
-from . import menu, ros
+from . import menu
+from .ros import ros
 import base64
 from io import BytesIO, StringIO
 import pygraphviz as pgv
@@ -76,11 +77,11 @@ def get_param(name):
 
 @bp.route('/')
 def get_param_overview():
-    # Get info about nodes
-    data = ros.get_info()
+    # Update ros api
+    ros.update()
 
     # Get menu items
-    menu_items = menu.get_items(data)
+    menu_items = menu.get_items()
 
     # Iterate over nodes
     content = get_param('/')
@@ -96,8 +97,8 @@ def get_param_info(name):
     if not name.startswith('/'):
         name = '/' + name
 
-    # Get info about param
-    data = ros.get_info()
+    # Update ros api
+    ros.update()
 
     # Generate content
     content = get_param(name)
@@ -109,5 +110,5 @@ def get_param_info(name):
     return render_template('base.html', title=f'Parameter {name}',
                             active_menu_item='param',
                             content=content,
-                            **menu.get_items(data, active_item=url))
+                            **menu.get_items(active_item=url))
                             

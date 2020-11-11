@@ -1,57 +1,42 @@
 from flask import Blueprint, Markup, Response, render_template, url_for
-from . import menu, ros
+from . import menu
+from .ros import ros
 from io import BytesIO
 import pygraphviz as pgv
 import rosgraph
 
 bp = Blueprint('topic', __name__, url_prefix='/topic')
 
-def get_graph(data, topic):
+def get_graph(topic):
     graph = pgv.AGraph(directed=True, forcelabels=True)
-    node_names = set()
+
+    topic_id = 'topic_' + topic.name
+    topic_label = f"{topic.name}\\n{topic.type}"
+    graph.add_node(topic_id, label=topic_label, shape='box')
 
     # Add publishers
-    for d in data['pubs']:
-        if d['topic'] == topic:
-            topic_id = 'topic_' + d['topic']
-            if topic_id not in node_names:
-                #node_url = url_for('topic.get_topic_info', name=topic)
-                node_label = f"{d['topic']}\\n{d['type']}"
-                graph.add_node(topic_id, label=node_label, shape='box')#, URL=node_url, target='_top')
-                node_names.add(topic_id)
-
-            for pub in d['publisher']:
-                if pub not in node_names:
-                    node_url = url_for('node.get_node_info', name=pub)
-                    graph.add_node(pub, shape='oval', URL=node_url, target='_top')
-                    node_names.add(pub)
-                graph.add_edge(pub, topic_id)
+    for node_name in topic.publishers:
+        node_id = 'pub_' + node_name
+        node_url = url_for('node.get_node_info', name=node_name)
+        graph.add_node(node_id, label=node_name, shape='oval', URL=node_url, target='_top')
+        graph.add_edge(node_id, topic_id)
 
     # Add subscribers
-    for d in data['subs']:
-        if d['topic'] == topic:
-            topic_id = 'topic_' + d['topic']
-            if topic_id not in node_names:
-                #node_url = url_for('topic.get_topic_info', name=topic)
-                node_label = f"{d['topic']}\\n{d['type']}"
-                graph.add_node(topic_id, label=node_label, shape='box')#, URL=node_url, target='_top')
-
-            for sub in d['subscriber']:
-                if sub not in node_names:
-                    node_url = url_for('node.get_node_info', name=sub)
-                    graph.add_node(sub, shape='oval', URL=node_url, target='_top')
-                    node_names.add(sub)
-                graph.add_edge(topic_id, sub)
+    for node_name in topic.subscribers:
+        node_id = 'sub_' + node_name
+        node_url = url_for('node.get_node_info', name=node_name)
+        graph.add_node(node_id, label=node_name, shape='oval', URL=node_url, target='_top')
+        graph.add_edge(topic_id, node_id)
 
     return graph
 
 @bp.route('/')
 def get_topic_overview():
-    # Get info about nodes
-    data = ros.get_info()
+    # Update ros api
+    ros.update()
 
     # Get menu items
-    menu_items = menu.get_items(data)
+    menu_items = menu.get_items()
 
     # Iterate over nodes
     content = ''
@@ -75,17 +60,15 @@ def get_topic_info(name):
     if not name.startswith('/'):
         name = '/' + name
 
-    # Resolve topic name
-    #topic_name = rosgraph.names.script_resolve_name('rostopic', name)
-    topic_name = name
+    # Update ros api
+    ros.update()
 
-    # Get info about topic
-    data = ros.get_info()
-    #topic = get_topic(topic_name)
+    # Get topic
+    topic = ros.get_topic(name)
 
     if generate_svg is True:
         # Generate graph
-        graph = get_graph(data, name)
+        graph = get_graph(topic)
         img_stream = BytesIO()
         graph.draw(path=img_stream, format='svg', prog='dot')
         svg = img_stream.getvalue().decode('utf-8')
@@ -94,6 +77,11 @@ def get_topic_info(name):
         return Response(svg, mimetype='image/svg+xml')
     else:
         content = ''  # get_topic_info_description(topic)
+        
+        # Get last message
+        msg = topic.msg
+        if msg is not None:
+            content += str(msg)
 
         # Format topic info
         content = Markup(content.replace('\n', '<br/>'))
@@ -103,10 +91,10 @@ def get_topic_info(name):
         img_data = url + '.svg'
 
         # Return rendered template
-        return render_template('base_with_svg.html', title=f'Topic {topic_name}',
+        return render_template('base_with_svg.html', title=f'Topic {name}',
                                active_menu_item='topic',
                                content=content,
-                               **menu.get_items(data, active_item=url),
+                               **menu.get_items(active_item=url),
                                img_data=img_data)
                                #img_data=img_stream)
                                #img_data=urllib.parse.quote(img_stream.rstrip('\n')))
