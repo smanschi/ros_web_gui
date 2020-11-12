@@ -1,3 +1,4 @@
+import atexit
 import rosgraph
 import roslib
 import rosnode
@@ -6,35 +7,12 @@ import rospy
 import rostopic
 import socket
 import sys
-import _thread
-
-def get_info():
-    # get master
-    master = rosgraph.Master('rosnode')
-
-    # go through the master system state first
-    try:
-        state = master.getSystemState()
-    except socket.error:
-        raise rosnode.ROSNodeIOException("Unable to communicate with master!")
-    
-    param_names = []
-    try:
-        param_names = rosparam.list_params('')
-    except rosparam.RosParamIOException:
-        print('Could not fetch parameter names from server', file=sys.stdout)
-    param_names = sorted(set(['/'.join(param.split('/')[:2]) for param in param_names]))
-
-    return {
-        'pubs':   [{'topic': s[0], 'publisher':  s[1], 'type': rostopic.get_topic_type(s[0])[0]} for s in state[0]],
-        'subs':   [{'topic': s[0], 'subscriber': s[1], 'type': rostopic.get_topic_type(s[0])[0]} for s in state[1]],
-        'srvs':   [{'topic': s[0], 'provider':   s[1], 'type': rostopic.get_topic_type(s[0])[0]} for s in state[2]],
-        'params': [{'name': s, 'type': 'unknown'} for s in param_names]
-    }
+import threading
 
 
-class Topic:
+class Topic():
     def __init__(self, name):
+        super().__init__()
         self.__name = name
         topic_type_info = rostopic.get_topic_type(name)
         data_class = roslib.message.get_message_class(topic_type_info[0])
@@ -129,13 +107,22 @@ class Service:
         self.__provider[node.name] = node
 
 
-class ROSApi:
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class ROSApi(metaclass=Singleton):
     def __init__(self):
         print("Instance created")
         self.__nodes = dict()
         self.__topics = dict()
         self.__services = dict()
         self.__params = dict()
+        rospy.init_node('ros_web_gui')
 
     @property
     def topics(self):

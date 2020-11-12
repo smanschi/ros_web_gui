@@ -81,7 +81,8 @@ def get_topic_info(name):
         # Get last message
         msg = topic.msg
         if msg is not None:
-            content += str(msg)
+            content += '<h2>Message</h2>'
+            content += f'<pre style="display: inline-block"><code class="html">{str(msg)}</code></pre><br/>'
 
         # Format topic info
         content = Markup(content.replace('\n', '<br/>'))

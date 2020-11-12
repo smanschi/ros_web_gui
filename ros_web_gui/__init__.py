@@ -21,7 +21,8 @@ def create_app(test_config=None):
     app.register_blueprint(topic.bp)
     app.register_blueprint(param.bp)
 
-    rospy.init_node('ros_web_gui')
+    # Start ros
+    ros.start()
 
     def get_graph():
         graph = pgv.AGraph(directed=True, forcelabels=True)
