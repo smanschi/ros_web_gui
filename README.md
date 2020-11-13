@@ -1,3 +1,9 @@
+# About
+ros_web_gui is a package for visualizing the available ROS nodes, topics, parameters and service
+calls in a web browser. It provides much of the functionality that is also available with
+the ROS command line tools and rqt_graph, but with a graphical user interface. When running
+the ros_web_gui, a flask-based webserver will be started that can be accessed on port 5000.
+
 # Installation
 conda install flask pygraphviz pyyaml rospy
 
