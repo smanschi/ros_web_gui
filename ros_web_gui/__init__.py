@@ -4,12 +4,9 @@ from .ros import ros
 
 def create_app(test_config=None):
     import pygraphviz as pgv
-    import rosgraph
-    import rospy
-    import rosnode
-    import rosservice
-    import rostopic
+    import os
     import socket
+    import yaml
     from . import menu
     from .ros import ros
     from io import BytesIO
@@ -21,8 +18,16 @@ def create_app(test_config=None):
     app.register_blueprint(topic.bp)
     app.register_blueprint(param.bp)
 
-    # Start ros
-    ros.start()
+    # Read config file
+    config_file = os.path.join(os.path.basename(__file__), '..', 'config', 'config.yaml')
+    with open(config_file, 'r') as stream:
+    try:
+        config = yaml.safe_load(stream))
+    except yaml.YAMLError as exc:
+        print(exc)
+        
+    # Configure ROS api
+    ros.config(**config)
 
     def get_graph():
         graph = pgv.AGraph(directed=True, forcelabels=True)
