@@ -122,6 +122,7 @@ class ROSApi(metaclass=Singleton):
         self.__topics = dict()
         self.__services = dict()
         self.__params = dict()
+        self.__blacklisted_nodes = set()
         rospy.init_node('ros_web_gui')
 
     @property
@@ -139,6 +140,9 @@ class ROSApi(metaclass=Singleton):
     @property
     def params(self):
         return self.__params
+    
+    def config(self, blacklisted_nodes):
+        self.__blacklisted_nodes = set(blacklisted_nodes)
 
     def get_topic(self, name):
         if name in self.__topics:
@@ -177,7 +181,7 @@ class ROSApi(metaclass=Singleton):
             if topic_name not in self.__topics:
                 self.__topics[topic_name] = Topic(topic_name)
             for node_name in s[1]:
-                if node_name not in self.__nodes:
+                if node_name not in self.__nodes and node_name not in self.__blacklisted_nodes:
                     self.__nodes[node_name] = Node(node_name)
                 self.__topics[topic_name].addPublisher(self.__nodes[node_name])
                 self.__nodes[node_name].addPublication(self.__topics[topic_name])
@@ -188,7 +192,7 @@ class ROSApi(metaclass=Singleton):
             if topic_name not in self.__topics:
                 self.__topics[topic_name] = Topic(topic_name)
             for node_name in s[1]:
-                if node_name not in self.__nodes:
+                if node_name not in self.__nodes and node_name not in self.__blacklisted_nodes:
                     self.__nodes[node_name] = Node(node_name)
                 self.__topics[topic_name].addSubscriber(self.__nodes[node_name])
                 self.__nodes[node_name].addSubscription(self.__topics[topic_name])
@@ -199,7 +203,7 @@ class ROSApi(metaclass=Singleton):
             if service_name not in self.__services:
                 self.__services[service_name] = Service(service_name)
             for node_name in s[1]:
-                if node_name not in self.__nodes:
+                if node_name not in self.__nodes and node_name not in self.__blacklisted_nodes:
                     self.__nodes[node_name] = Node(node_name)
                 self.__services[service_name].addProvider(self.__nodes[node_name])
                 self.__nodes[node_name].addService(self.__services[service_name])
