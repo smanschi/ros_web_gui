@@ -1,0 +1,4 @@
+blacklisted_nodes:
+  - ros_web_gui
+  - ros_out
+  - ros_out_agg
