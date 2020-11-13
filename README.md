@@ -1,9 +1,9 @@
 # Installation
-conda install flask pygraphviz pyyaml rospkg
+conda install flask pygraphviz pyyaml rospy
 
 OR
 
-python3 -m venv tutorial-env
+python3 -m venv venv\
 pip install -r requirements.txt
 
 # Running
