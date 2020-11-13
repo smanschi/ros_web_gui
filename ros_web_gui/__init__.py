@@ -21,10 +21,10 @@ def create_app(test_config=None):
     # Read config file
     config_file = os.path.join(os.path.basename(__file__), '..', 'config', 'config.yaml')
     with open(config_file, 'r') as stream:
-    try:
-        config = yaml.safe_load(stream))
-    except yaml.YAMLError as exc:
-        print(exc)
+        try:
+            config = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
         
     # Configure ROS api
     ros.config(**config)
