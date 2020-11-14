@@ -1,4 +1,6 @@
 blacklisted_nodes:
-  - ros_web_gui
-  - ros_out
-  - ros_out_agg
+  - rosout
+
+blacklisted_topics:
+  - rosout
+  - rosout_agg

@@ -5,33 +5,49 @@ from .ros import ros
 def create_app(test_config=None):
     import pygraphviz as pgv
     import os
+    import rospy
+    import signal
     import socket
+    import sys
     import yaml
     from . import menu
     from .ros import ros
     from io import BytesIO
 
-    app = Flask(__name__)
+    # Signal handler (don't know why this is needed)
+    def signal_handler(sig, frame):
+        print('You pressed Ctrl+C!')
+        sys.exit(0)
 
-    app.register_blueprint(node.bp)
-    app.register_blueprint(service.bp)
-    app.register_blueprint(topic.bp)
-    app.register_blueprint(param.bp)
+    signal.signal(signal.SIGINT, signal_handler)
 
     # Read config file
-    config_file = os.path.join(os.path.basename(__file__), '..', 'config', 'config.yaml')
+    config_file = os.path.join(os.path.dirname(__file__), '..', 'config', 'config.yaml')
     with open(config_file, 'r') as stream:
         try:
             config = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
+
+    # Instantiate ROS api
+    rospy.init_node('ros_web_gui')
+    if 'blacklisted_nodes' not in config:
+        config['blacklisted_nodes'] = ['ros_web_gui']
+    else:
+        config['blacklisted_nodes'].append('ros_web_gui')
         
     # Configure ROS api
     ros.config(**config)
 
+    # Assemble app
+    app = Flask(__name__)
+    app.register_blueprint(node.bp)
+    app.register_blueprint(service.bp)
+    app.register_blueprint(topic.bp)
+    app.register_blueprint(param.bp)
+
     def get_graph():
         graph = pgv.AGraph(directed=True, forcelabels=True)
-        node_names = set()
 
         # Add one graph node for each ros node
         for node_name in ros.nodes:
