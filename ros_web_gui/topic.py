@@ -77,6 +77,18 @@ def get_topic_info(name):
         return Response(svg, mimetype='image/svg+xml')
     else:
         content = ''  # get_topic_info_description(topic)
+
+        # Get message stats
+        msg_stats = topic.msg_stats
+        if msg_stats is not None:
+            content += '<h2>Statistics</h2>'
+            content += f'Messages received:<br />\n'
+            content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["num_messages"]}</code></pre><br />\n'
+            content += f'Messages per second:<br />\n'
+            content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["messages_per_second"]:.1f}</code></pre><br />\n'            
+        else:
+            content += '<h2>Statistics</h2>'
+            content += f'<pre style="display: inline-block"><code class="plaintext">Not available</code></pre><br />\n'
         
         # Get last message
         msg = topic.msg

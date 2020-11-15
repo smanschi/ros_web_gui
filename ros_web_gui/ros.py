@@ -6,7 +6,7 @@ import rospy
 import rostopic
 import socket
 import sys
-
+from datetime import datetime
 
 class Topic():
     def __init__(self, name):
@@ -16,6 +16,7 @@ class Topic():
         data_class = roslib.message.get_message_class(topic_type_info[0])
         self.__type = topic_type_info[0]
         self.__msg = None
+        self.__msg_info = None
         self.__ros_subscriber = rospy.Subscriber(name, data_class, self.__onMessage)
         self.__subs = dict()
         self.__pubs = dict()
@@ -31,6 +32,15 @@ class Topic():
     @property
     def msg(self):
         return self.__msg
+
+    @property
+    def msg_stats(self):
+        if self.__msg_info is None:
+            return None
+        return {
+            'num_messages': self.__msg_info['num_messages'],
+            'messages_per_second': float(self.__msg_info['num_messages']) / (datetime.now() - self.__msg_info['timestamp_first_message']).total_seconds()
+        }
 
     @property
     def subscribers(self):
@@ -51,6 +61,14 @@ class Topic():
         self.__subs[node.name] = node
 
     def __onMessage(self, msg):
+        if self.__msg_info is None:
+            self.__msg_info = {
+                'num_messages': 1,
+                'timestamp_first_message': datetime.now()
+            }
+        else:
+            self.__msg_info['num_messages'] += 1
+
         self.__msg = msg
 
 
