@@ -5,12 +5,20 @@ the ROS command line tools and rqt_graph, but with a graphical user interface. W
 the ros_web_gui, a flask-based webserver will be started that can be accessed on port 5000.
 
 # Installation
-conda install flask pygraphviz pyyaml rospy
+First, you should install ros on your machine. It is heavily recommened to use Ubuntu 20.04
+or higher as ros-noetic is the first version with support for python3.
+
+After installing ROS, you need the python packages pygraphviz, pyyaml and flask. So you can
+set up a conda env or virtual environment with
+
+conda install flask pygraphviz pyyaml
 
 OR
 
-python3 -m venv venv\
-pip install -r requirements.txt
+python3 -m venv venv
+pip install flask pygraphviz pyyaml
+
+After this, you should be ready to use the ros_web_gui.
 
 # Running
 You can run the scripts/run_flask.sh script which will source the virtual environment
