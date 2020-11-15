@@ -86,6 +86,8 @@ def get_topic_info(name):
             content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["num_messages"]}</code></pre><br />\n'
             content += f'Messages per second:<br />\n'
             content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["messages_per_second"]:.1f}</code></pre><br />\n'            
+            content += f'Last message:<br />\n'
+            content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["last_message"].strftime("%Y-%m-%d %H:%M:%S.%f")}</code></pre><br />\n'                
         else:
             content += '<h2>Statistics</h2>'
             content += f'<pre style="display: inline-block"><code class="plaintext">Not available</code></pre><br />\n'
