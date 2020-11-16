@@ -31,13 +31,10 @@ class Topic():
 
     @property
     def msg(self):
-        return self.__msg
-
-    @property
-    def msg_stats(self):
         if self.__msg_info is None:
             return None
         return {
+            'msg': self.__msg,
             'num_messages': self.__msg_info['num_messages'],
             'messages_per_second': float(self.__msg_info['num_messages']) / (datetime.now() - self.__msg_info['first_message']).total_seconds(),
             'last_message': self.__msg_info['last_message']
@@ -66,7 +63,7 @@ class Topic():
             self.__msg_info = {
                 'num_messages': 1,
                 'first_message': datetime.now(),
-                'last_message': None              
+                'last_message': datetime.now()              
             }
         else:
             self.__msg_info['num_messages'] += 1

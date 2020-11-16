@@ -78,25 +78,20 @@ def get_topic_info(name):
     else:
         content = ''  # get_topic_info_description(topic)
 
-        # Get message stats
-        msg_stats = topic.msg_stats
-        if msg_stats is not None:
-            content += '<h2>Statistics</h2>'
-            content += f'Messages received:<br />\n'
-            content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["num_messages"]}</code></pre><br />\n'
-            content += f'Messages per second:<br />\n'
-            content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["messages_per_second"]:.1f}</code></pre><br />\n'            
-            content += f'Last message:<br />\n'
-            content += f'<pre style="display: inline-block"><code class="plaintext">{msg_stats["last_message"].strftime("%Y-%m-%d %H:%M:%S.%f")}</code></pre><br />\n'                
-        else:
-            content += '<h2>Statistics</h2>'
-            content += f'<pre style="display: inline-block"><code class="plaintext">Not available</code></pre><br />\n'
-        
-        # Get last message
+        # Get message
         msg = topic.msg
         if msg is not None:
-            content += '<h2>Message</h2>'
-            content += f'<pre style="display: inline-block"><code class="html">{str(msg)}</code></pre><br/>'
+            msg_dict = {
+                'Messages received': msg['num_messages'],
+                'Messages per second': f"{msg['messages_per_second']:.1f}",
+                'Last message received': msg["last_message"].strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            }              
+        else:
+            msg_dict = {
+                'Messages received': 0,
+                'Messages per second': "-",
+                'Last message': "-"                
+            }
 
         # Format topic info
         content = Markup(content.replace('\n', '<br/>'))
@@ -106,8 +101,10 @@ def get_topic_info(name):
         img_data = url + '.svg'
 
         # Return rendered template
-        return render_template('base_with_svg.html', title=f'Topic {name}',
+        return render_template('topic.html', title=f'Topic {name}',
                                active_menu_item='topic',
+                               msg_items=msg_dict,
+                               msg=None if msg is None else msg['msg'],
                                content=content,
                                **menu.get_items(active_item=url),
                                img_data=img_data)

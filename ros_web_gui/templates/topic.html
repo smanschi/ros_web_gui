@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ super() }}{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <header class="w3-container">
+        <h2>{{ title }}</h2>
+    </header>
+    <div class="w3-container">
+        <object data="{{ img_data }}" type="image/svg+xml"></object>
+        <h2>Statistics</h2>
+        <table class="w3-codespan" style="display: inline-block; color: black">
+            {% for item in msg_items %}
+            <tr>
+                <td>{{ item }}</td>
+                <td class="w3-right-align" style="padding-left: 40px">{{ msg_items[item] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h2>Message</h2>
+        <pre style="display: inline-block"><code class="w3-codespan yaml">{{ msg }}</code></pre><br/>
+    </div>
+{% endblock %}
