@@ -1,4 +1,4 @@
-from flask import Blueprint, Markup, Response, render_template, url_for
+from flask import Blueprint, Markup, Response, jsonify, render_template, request, url_for
 from . import menu
 from .ros import ros
 from io import BytesIO
@@ -57,6 +57,9 @@ def get_topic_info(name):
         name = name[:-4]
         generate_svg = True
 
+    # Check if a json representation should be returned
+    generate_json = request.args.get('get', '', type=str) == 'json'
+
     if not name.startswith('/'):
         name = '/' + name
 
@@ -73,25 +76,31 @@ def get_topic_info(name):
         graph.draw(path=img_stream, format='svg', prog='dot')
         svg = img_stream.getvalue().decode('utf-8')
         svg = svg.replace('xlink:', '')
-
         return Response(svg, mimetype='image/svg+xml')
+
+    # Get message
+    msg = topic.msg
+    if msg is not None:
+        msg_data = [
+            {'id': 'num_messages', 'description': 'Messages received', 'value': msg['num_messages']},
+            {'id': 'messages_per_second', 'description': 'Messages per second', 'value': f"{msg['messages_per_second']:.1f}"},
+            {'id': 'last_message', 'description': 'Last message received', 'value': msg["last_message"].strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]},
+            {'id': 'msg', 'description': 'Message', 'value': str(type(msg['msg']))}
+        ]           
+    else:
+        msg_data = [
+            {'id': 'num_messages', 'description': 'Messages received', 'value': 0},
+            {'id': 'messages_per_second', 'description': 'Messages per second', 'value': '-'},
+            {'id': 'last_message', 'description': 'Last message received', 'value': '-'},
+            {'id': 'msg', 'description': 'Message', 'value': '-'}
+        ]
+
+    if generate_json is True:
+        print('returning json')
+        print(msg_data)
+        return jsonify(msg_data)
     else:
         content = ''  # get_topic_info_description(topic)
-
-        # Get message
-        msg = topic.msg
-        if msg is not None:
-            msg_dict = {
-                'Messages received': msg['num_messages'],
-                'Messages per second': f"{msg['messages_per_second']:.1f}",
-                'Last message received': msg["last_message"].strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            }              
-        else:
-            msg_dict = {
-                'Messages received': 0,
-                'Messages per second': "-",
-                'Last message': "-"                
-            }
 
         # Format topic info
         content = Markup(content.replace('\n', '<br/>'))
@@ -103,7 +112,8 @@ def get_topic_info(name):
         # Return rendered template
         return render_template('topic.html', title=f'Topic {name}',
                                active_menu_item='topic',
-                               msg_items=msg_dict,
+                               url=url,
+                               msg_items=msg_data,
                                msg=None if msg is None else msg['msg'],
                                content=content,
                                **menu.get_items(active_item=url),

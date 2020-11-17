@@ -12,13 +12,42 @@
         <h2>Statistics</h2>
         <table class="w3-codespan" style="display: inline-block; color: black">
             {% for item in msg_items %}
+            {% if item['id'] != 'msg' %}
             <tr>
-                <td>{{ item }}</td>
-                <td class="w3-right-align" style="padding-left: 40px">{{ msg_items[item] }}</td>
+                <td>{{ item['description'] }}</td>
+                <td class="w3-right-align" style="padding-left: 40px" id="{{ item['id'] }}">{{ item['value'] }}</td>
             </tr>
+            {% endif %}
             {% endfor %}
         </table>
-        <h2>Message</h2>
-        <pre style="display: inline-block"><code class="w3-codespan yaml">{{ msg }}</code></pre><br/>
+        <h2 id="message_title">Message</h2>
+        <button type="submit" class="w3-button w3-border w3-round-large" id="reload"><i class="fa fa-repeat"></i></button><br />
+        <pre style="display: inline-block"><code class="w3-codespan yaml" id="msg">{{ msg }}</code></pre><br/>
+        <script type=text/javascript>
+            $(function() {
+                $('button#reload').bind('click', function() {
+                    console.log('Requesting JSON');
+                    $.getJSON('{{ url }}', {
+                        get: 'json'
+                    }, function(data) {
+                        console.log('Got JSON result');
+                        jQuery.each(data, function() {
+                            if ($('#' + this['id']).length ) {
+                                console.log('found: ' + this['id']);
+                            } else {
+                                console.log('not found: ' + this['id']);
+                            }
+                            $('#' + this['id']).html(this['value']);
+                        });
+                });
+                return false;
+                });
+            });
+
+            function reloadMessage() {
+                var x = document.getElementById("message_title");
+                x.innerHTML = "Button works";
+            } 
+        </script>
     </div>
 {% endblock %}

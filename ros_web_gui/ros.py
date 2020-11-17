@@ -141,6 +141,7 @@ class Singleton(type):
 class ROSApi(metaclass=Singleton):
     def __init__(self):
         print("Instance created")
+        self.__system_state = None
         self.__nodes = dict()
         self.__topics = dict()
         self.__services = dict()
@@ -199,56 +200,62 @@ class ROSApi(metaclass=Singleton):
             print('Could not fetch parameter names from server', file=sys.stdout)
         self.__params = sorted(set(['/'.join(param.split('/')[:2]) for param in param_names]))
 
-        # Clear state
-        # Topics will not be removed to avoid killing the topic subscribers
-        self.__nodes.clear()
-        self.__services.clear()
+        if state is None or state != self.__system_state:
+            # Clear state
+            print('Resetting nodes and services')
+            
+            # Topics will not be removed to avoid killing the topic subscribers
+            self.__nodes.clear()
+            self.__services.clear()
 
-        # Iterate over publisher topics and create nodes and topics if necessary
-        for s in state[0]:
-            topic_name = s[0]
-            if topic_name not in self.__topics and topic_name not in self.__blacklisted_topics:
-                self.__topics[topic_name] = Topic(topic_name)
-            for node_name in s[1]:
-                if node_name not in self.__blacklisted_nodes:
-                    if node_name not in self.__nodes:
-                        self.__nodes[node_name] = Node(node_name)
-                    if topic_name not in self.__blacklisted_topics:
-                        self.__topics[topic_name].addPublisher(self.__nodes[node_name])
-                        self.__nodes[node_name].addPublication(self.__topics[topic_name])
+            # Iterate over publisher topics and create nodes and topics if necessary
+            for s in state[0]:
+                topic_name = s[0]
+                if topic_name not in self.__topics and topic_name not in self.__blacklisted_topics:
+                    self.__topics[topic_name] = Topic(topic_name)
+                for node_name in s[1]:
+                    if node_name not in self.__blacklisted_nodes:
+                        if node_name not in self.__nodes:
+                            self.__nodes[node_name] = Node(node_name)
+                        if topic_name not in self.__blacklisted_topics:
+                            self.__topics[topic_name].addPublisher(self.__nodes[node_name])
+                            self.__nodes[node_name].addPublication(self.__topics[topic_name])
 
-        # Iterate over subscriber topics and create nodes and topics if necessary
-        for s in state[1]:
-            topic_name = s[0]
-            if topic_name not in self.__topics and topic_name not in self.__blacklisted_topics:
-                self.__topics[topic_name] = Topic(topic_name)
-            for node_name in s[1]:
-                if node_name not in self.__blacklisted_nodes:
-                    if node_name not in self.__nodes:
-                        self.__nodes[node_name] = Node(node_name)
-                    if topic_name not in self.__blacklisted_topics:
-                        self.__topics[topic_name].addSubscriber(self.__nodes[node_name])
-                        self.__nodes[node_name].addSubscription(self.__topics[topic_name])
+            # Iterate over subscriber topics and create nodes and topics if necessary
+            for s in state[1]:
+                topic_name = s[0]
+                if topic_name not in self.__topics and topic_name not in self.__blacklisted_topics:
+                    self.__topics[topic_name] = Topic(topic_name)
+                for node_name in s[1]:
+                    if node_name not in self.__blacklisted_nodes:
+                        if node_name not in self.__nodes:
+                            self.__nodes[node_name] = Node(node_name)
+                        if topic_name not in self.__blacklisted_topics:
+                            self.__topics[topic_name].addSubscriber(self.__nodes[node_name])
+                            self.__nodes[node_name].addSubscription(self.__topics[topic_name])
 
-        # Delete blacklisted topics
-        remove = [topic_name for topic_name in self.__topics if topic_name in self.__blacklisted_topics]
-        for topic_name in remove: del self.__topics[topic_name]
+            # Delete blacklisted topics
+            remove = [topic_name for topic_name in self.__topics if topic_name in self.__blacklisted_topics]
+            for topic_name in remove: del self.__topics[topic_name]
 
-        # Iterate over service topics and create nodes and services if necessary
-        for s in state[2]:
-            service_name = s[0]
-            if service_name not in self.__services:
-                self.__services[service_name] = Service(service_name)
-            self.__services[service_name].clear()
-            for node_name in s[1]:
-                if node_name not in self.__blacklisted_nodes:
-                    if node_name not in self.__nodes:
-                        self.__nodes[node_name] = Node(node_name)
-                    self.__services[service_name].addProvider(self.__nodes[node_name])
-                    self.__nodes[node_name].addService(self.__services[service_name])
-            # Remove service if it does not have a provider
-            if len(self.__services[service_name].providers) == 0:
-                del self.__services[service_name]
+            # Iterate over service topics and create nodes and services if necessary
+            for s in state[2]:
+                service_name = s[0]
+                if service_name not in self.__services:
+                    self.__services[service_name] = Service(service_name)
+                self.__services[service_name].clear()
+                for node_name in s[1]:
+                    if node_name not in self.__blacklisted_nodes:
+                        if node_name not in self.__nodes:
+                            self.__nodes[node_name] = Node(node_name)
+                        self.__services[service_name].addProvider(self.__nodes[node_name])
+                        self.__nodes[node_name].addService(self.__services[service_name])
+                # Remove service if it does not have a provider
+                if len(self.__services[service_name].providers) == 0:
+                    del self.__services[service_name]
+
+            # Store system state
+            self.__system_state = state
 
 ros = ROSApi()
 #rospy.init_node('ros_web_gui')
