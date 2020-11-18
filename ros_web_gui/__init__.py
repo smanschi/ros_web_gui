@@ -46,40 +46,13 @@ def create_app(test_config=None):
     app.register_blueprint(topic.bp)
     app.register_blueprint(param.bp)
 
-    def get_graph():
-        graph = pgv.AGraph(directed=True, forcelabels=True)
-
-        # Add one graph node for each ros node
-        for node_name in ros.nodes:
-            node_url = url_for('node.get_node_info', name=node_name)
-            graph.add_node(node_name, shape='oval', URL=node_url, target='_top')
-            
-        # Iterate over topics, add a graph node for each topic and draw edges to subscribers and publishers
-        for topic_name, topic in ros.topics.items():
-            topic_id = 'topic_' + topic_name
-            node_url = url_for('topic.get_topic_info', name=topic_name)
-            node_label = f"{topic_name}\\n{topic.type}"
-            graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
-
-            for node_name in topic.publishers:
-                graph.add_edge(node_name, topic_id)
-
-            for node_name in topic.subscribers:
-                graph.add_edge(topic_id, node_name)
-
-        return graph
-
     @app.route('/graph.svg')
     def get_graph_svg():
         # Update ros api
         ros.update()
 
-        # Generate graph
-        graph = get_graph()
-        img_stream = BytesIO()
-        graph.draw(path=img_stream, format='svg', prog='dot')
-        svg = img_stream.getvalue().decode('utf-8')
-        svg = Markup(svg.replace('xlink:', '').replace('w3&#45;', 'w3-').replace('hover&#45;', 'hover-'))
+        # Get svg
+        svg = ros.svg()
         return Response(svg, mimetype='image/svg+xml')
 
     @app.route('/')
