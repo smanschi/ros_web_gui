@@ -9,7 +9,7 @@
     </header>
     <div class="w3-container">
         <object data="{{ img_data }}" type="image/svg+xml"></object>
-        <h2>Statistics</h2>
+        <h2 id="message_title">Message <button type="submit" class="w3-button w3-border w3-padding-small w3-small w3-round-large" id="reload"><i class="fa fa-repeat"></i></button></h2>        
         <table class="w3-codespan" style="display: inline-block; color: black">
             {% for item in msg_items %}
             {% if item['id'] != 'msg' %}
@@ -20,9 +20,7 @@
             {% endif %}
             {% endfor %}
         </table>
-        <h2 id="message_title">Message</h2>
-        <button type="submit" class="w3-button w3-border w3-round-large" id="reload"><i class="fa fa-repeat"></i></button><br />
-        <pre style="display: inline-block"><code class="w3-codespan yaml" id="msg">{{ msg }}</code></pre><br/>
+        <pre><code class="w3-codespan yaml" id="msg">{{ msg }}</code></pre><br/>
         <script type=text/javascript>
             $(function() {
                 $('button#reload').bind('click', function() {
@@ -32,12 +30,10 @@
                     }, function(data) {
                         console.log('Got JSON result');
                         jQuery.each(data, function() {
-                            if ($('#' + this['id']).length ) {
-                                console.log('found: ' + this['id']);
-                            } else {
-                                console.log('not found: ' + this['id']);
-                            }
                             $('#' + this['id']).html(this['value']);
+                            if(this['id'] == 'msg') {
+                                hljs.highlightBlock($('#' + this['id']).get(0));
+                            }
                         });
                 });
                 return false;

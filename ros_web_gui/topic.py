@@ -85,7 +85,7 @@ def get_topic_info(name):
             {'id': 'num_messages', 'description': 'Messages received', 'value': msg['num_messages']},
             {'id': 'messages_per_second', 'description': 'Messages per second', 'value': f"{msg['messages_per_second']:.1f}"},
             {'id': 'last_message', 'description': 'Last message received', 'value': msg["last_message"].strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]},
-            {'id': 'msg', 'description': 'Message', 'value': str(type(msg['msg']))}
+            {'id': 'msg', 'description': 'Message', 'value': str(msg['msg'])}
         ]           
     else:
         msg_data = [
@@ -97,7 +97,6 @@ def get_topic_info(name):
 
     if generate_json is True:
         print('returning json')
-        print(msg_data)
         return jsonify(msg_data)
     else:
         content = ''  # get_topic_info_description(topic)
