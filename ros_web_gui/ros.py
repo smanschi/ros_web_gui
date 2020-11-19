@@ -47,7 +47,8 @@ class Topic():
             'msg': self.__msg,
             'num_messages': self.__msg_info['num_messages'],
             'messages_per_second': float(self.__msg_info['num_messages']) / (datetime.now() - self.__msg_info['first_message']).total_seconds(),
-            'last_message': self.__msg_info['last_message']
+            'last_message': self.__msg_info['last_message'],
+            'avg_size': self.__msg_info['avg_size']
         }
 
     @property
@@ -129,11 +130,13 @@ class Topic():
             self.__msg_info = {
                 'num_messages': 1,
                 'first_message': datetime.now(),
-                'last_message': datetime.now()              
+                'last_message': datetime.now(),
+                'avg_size': sys.getsizeof(msg)          
             }
         else:
             self.__msg_info['num_messages'] += 1
             self.__msg_info['last_message'] = datetime.now()
+            self.__msg_info['avg_size'] = (self.__msg_info['avg_size']*(self.__msg_info['num_messages']-1) + sys.getsizeof(msg))/self.__msg_info['num_messages']
 
         self.__msg = msg
 

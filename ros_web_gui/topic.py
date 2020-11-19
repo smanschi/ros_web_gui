@@ -51,6 +51,8 @@ def get_topic_info(name):
         msg_data = [
             {'id': 'num_messages', 'description': 'Messages received', 'value': msg['num_messages']},
             {'id': 'messages_per_second', 'description': 'Messages per second', 'value': f"{msg['messages_per_second']:.1f}"},
+            {'id': 'avg_size', 'description': 'Average message size', 'value': f"{msg['avg_size']:.0f} Bytes"},
+            {'id': 'bandwidth', 'description': 'Bandwidth', 'value': f"{msg['avg_size']*msg['messages_per_second']:.0f} Bytes/s"},
             {'id': 'last_message', 'description': 'Last message received', 'value': msg["last_message"].strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]},
             {'id': 'msg', 'description': 'Message', 'value': str(msg['msg'])}
         ]           
@@ -58,8 +60,10 @@ def get_topic_info(name):
         msg_data = [
             {'id': 'num_messages', 'description': 'Messages received', 'value': 0},
             {'id': 'messages_per_second', 'description': 'Messages per second', 'value': '-'},
+            {'id': 'avg_size', 'description': 'Average message size', 'value': '-'},
+            {'id': 'bandwidth', 'description': 'Bandwidth', 'value': '-'},
             {'id': 'last_message', 'description': 'Last message received', 'value': '-'},
-            {'id': 'msg', 'description': 'Message', 'value': '-'}
+            {'id': 'msg', 'description': 'Message', 'value': 'None'}
         ]
 
     if mode == 'json':
