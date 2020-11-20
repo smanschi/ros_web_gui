@@ -10,6 +10,7 @@ import sys
 from datetime import datetime
 from flask import Markup, url_for
 from io import BytesIO
+from .util import get_object_size
 
 class Topic():
     def __init__(self, name):
@@ -131,12 +132,12 @@ class Topic():
                 'num_messages': 1,
                 'first_message': datetime.now(),
                 'last_message': datetime.now(),
-                'avg_size': sys.getsizeof(msg)          
+                'avg_size': get_object_size(msg)          
             }
         else:
             self.__msg_info['num_messages'] += 1
             self.__msg_info['last_message'] = datetime.now()
-            self.__msg_info['avg_size'] = (self.__msg_info['avg_size']*(self.__msg_info['num_messages']-1) + sys.getsizeof(msg))/self.__msg_info['num_messages']
+            self.__msg_info['avg_size'] = (self.__msg_info['avg_size']*(self.__msg_info['num_messages']-1) + get_object_size(msg))/self.__msg_info['num_messages']
 
         self.__msg = msg
 

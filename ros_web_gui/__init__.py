@@ -39,6 +39,9 @@ def create_app(test_config=None):
     # Configure ROS api
     ros.config(**config)
 
+    # Start ROS api
+    ros.update()
+
     # Assemble app
     app = Flask(__name__)
     app.register_blueprint(node.bp)
