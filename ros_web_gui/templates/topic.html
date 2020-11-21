@@ -24,7 +24,7 @@
         <pre style="display: inline-block"><code class="w3-codespan yaml" id="msg">{{ msg }}</code></pre><br/>
         <h2>Publish Message</h2>
         <form action="{{ url }}" method="POST">
-            <input type="text"   class="w3-input w3-codespan" style="display: inline-block" id="msg_pub" value="{{ msg_template }}" /><br />
+            <input type="text"   class="w3-input w3-codespan" style="display: inline-block" name="msg_pub" value="{{ msg_template }}" /><br />
             <br />
             <input type="submit" class="w3-button w3-border w3-padding-small w3-round-large" id="publish" value="Publish" /><br />
         </form>

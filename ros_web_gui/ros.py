@@ -23,6 +23,7 @@ class Topic():
         self.__msg_pub = data_class()
         self.__msg_info = None
         self.__ros_subscriber = rospy.Subscriber(name, data_class, self.__onMessage)
+        self.__ros_publisher = rospy.Publisher(name, data_class, queue_size=1)
         self.__subs = dict()
         self.__pubs = dict()
         self.__graph = None
@@ -77,6 +78,9 @@ class Topic():
     def addSubscriber(self, node):
         self.__subs[node.name] = node
         self.__times['state'] = datetime.now()
+
+    def publish(self, msg_data):
+        print(msg_data)
 
     def graph(self):
         # Check if we can return an existing graph

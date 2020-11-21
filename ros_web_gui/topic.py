@@ -26,12 +26,8 @@ def get_topic_overview():
                             items=items,
                             **menu_items)   
 
-@bp.route('/<path:name>')
-def get_topic_info(name, methods = ['GET', 'POST']):
-    if request.method == 'POST':
-        msg_pub = request.form['msg_pub']
-        print(msg_pub)
-
+@bp.route('/<path:name>', methods=['GET', 'POST'])
+def get_topic_info(name):
     # Check if a json or svg representation should be returned
     mode = request.args.get('get', '', type=str)
 
@@ -47,6 +43,11 @@ def get_topic_info(name, methods = ['GET', 'POST']):
 
     # Get topic
     topic = ros.get_topic(name)
+
+    # Handle post request
+    if request.method == 'POST':
+        msg_pub = request.form['msg_pub']
+        topic.publish(msg_pub)
 
     # Return svg
     if mode == 'svg':
