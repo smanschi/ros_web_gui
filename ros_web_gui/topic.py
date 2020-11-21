@@ -27,15 +27,23 @@ def get_topic_overview():
                             **menu_items)   
 
 @bp.route('/<path:name>')
-def get_topic_info(name):
+def get_topic_info(name, methods = ['GET', 'POST']):
+    if request.method == 'POST':
+        msg_pub = request.form['msg_pub']
+        print(msg_pub)
+
     # Check if a json or svg representation should be returned
     mode = request.args.get('get', '', type=str)
 
-    if not name.startswith('/'):
-        name = '/' + name
-
     # Update ros api
     ros.update()
+
+    # Add slash to name
+    if name[0] != '/':
+        name_without_slash = name
+        name = '/' + name
+    else:
+        name_without_slash = name[1:]
 
     # Get topic
     topic = ros.get_topic(name)
@@ -76,7 +84,7 @@ def get_topic_info(name):
         content = Markup(content.replace('\n', '<br/>'))
 
         # Image url
-        url = url_for('topic.get_topic_info', name=name)
+        url = url_for('topic.get_topic_info', name=name_without_slash)
         img_data = url + '?get=svg'
 
         # Return rendered template
@@ -85,6 +93,7 @@ def get_topic_info(name):
                                url=url,
                                msg_items=msg_data,
                                msg=None if msg is None else msg['msg'],
+                               msg_template=topic.msg_template,
                                content=content,
                                **menu.get_items(active_item=url),
                                img_data=img_data)

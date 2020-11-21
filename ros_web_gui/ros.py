@@ -20,6 +20,7 @@ class Topic():
         data_class = roslib.message.get_message_class(topic_type_info[0])
         self.__type = topic_type_info[0]
         self.__msg = None
+        self.__msg_pub = data_class()
         self.__msg_info = None
         self.__ros_subscriber = rospy.Subscriber(name, data_class, self.__onMessage)
         self.__subs = dict()
@@ -51,6 +52,10 @@ class Topic():
             'last_message': self.__msg_info['last_message'],
             'avg_size': self.__msg_info['avg_size']
         }
+
+    @property
+    def msg_template(self):
+        return self.__msg_pub
 
     @property
     def subscribers(self):
@@ -440,6 +445,8 @@ class ROSApi(metaclass=Singleton):
     def get_topic(self, name):
         if name in self.__topics:
             return self.__topics[name]
+        if '/'+name in self.__topics:
+            return self.__topics['/'+name]
         return None
 
     def get_node(self, name):
