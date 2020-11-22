@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 from flask import Markup, url_for
 from io import BytesIO
-from .util import get_object_size
+from .util import get_object_size, str_to_msg
 
 class Topic():
     def __init__(self, name):
@@ -79,8 +79,12 @@ class Topic():
         self.__subs[node.name] = node
         self.__times['state'] = datetime.now()
 
-    def publish(self, msg_data):
-        print(msg_data)
+    def publish(self, msg_str):
+        try:
+            msg = str_to_msg(msg_str, self.__ros_publisher.data_class)
+            self.__ros_publisher.publish(msg)
+        except Exception as e:
+            rospy.loginfo(e)
 
     def graph(self):
         # Check if we can return an existing graph

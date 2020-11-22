@@ -1,4 +1,5 @@
 import sys
+import yaml
 
 def get_object_size(obj, seen=None):
     """Recursively finds size of objects
@@ -27,3 +28,22 @@ def get_object_size(obj, seen=None):
     if hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
         size += sum([get_object_size(i, seen) for i in obj])
     return size
+
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+def _dict_to_msg(data):
+    if isinstance(data, dict):
+        data = AttrDict(**data)
+        for key in data:
+            data[key] = _dict_to_msg(data[key])
+        return data
+    else:
+        return data
+
+def str_to_msg(data, cls):
+    data_dict = yaml.safe_load(data)
+    msg = _dict_to_msg(data_dict)
+    return cls(**msg)
