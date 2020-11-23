@@ -1,3 +1,4 @@
+import rospy
 import sys
 import yaml
 
@@ -35,10 +36,17 @@ class AttrDict(dict):
         self.__dict__ = self
 
 def _dict_to_msg(data):
-    if isinstance(data, dict):
+    if isinstance(data, dict):    
+        # ToDo: Not really a nice special case for timestamps
+        if 'secs' in data and 'nsecs' in data:
+            return rospy.get_rostime()
         data = AttrDict(**data)
         for key in data:
             data[key] = _dict_to_msg(data[key])
+        return data
+    elif isinstance(data, list):
+        for idx, ele in enumerate(data):
+            data[idx] = _dict_to_msg(ele)
         return data
     else:
         return data
@@ -46,4 +54,5 @@ def _dict_to_msg(data):
 def str_to_msg(data, cls):
     data_dict = yaml.safe_load(data)
     msg = _dict_to_msg(data_dict)
-    return cls(**msg)
+    obj = cls(**msg)
+    return obj
