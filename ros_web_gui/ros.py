@@ -1,4 +1,5 @@
 import pygraphviz as pgv
+import roscpp
 import rosgraph
 import roslib
 import rosnode
@@ -17,13 +18,12 @@ class Topic():
         super().__init__()
         self.__name = name
         topic_type_info = rostopic.get_topic_type(name)
-        data_class = roslib.message.get_message_class(topic_type_info[0])
         self.__type = topic_type_info[0]
+        self.__data_class = roslib.message.get_message_class(topic_type_info[0])
         self.__msg = None
-        self.__msg_pub = data_class()
         self.__msg_info = None
-        self.__ros_subscriber = rospy.Subscriber(name, data_class, self.__onMessage)
-        self.__ros_publisher = rospy.Publisher(name, data_class, queue_size=1)
+        self.__ros_subscriber = rospy.Subscriber(name, self.__data_class, self.__onMessage)
+        self.__ros_publisher = rospy.Publisher(name, self.__data_class, queue_size=1)
         self.__subs = dict()
         self.__pubs = dict()
         self.__graph = None
@@ -55,8 +55,8 @@ class Topic():
         }
 
     @property
-    def msg_template(self):
-        return self.__msg_pub
+    def data_class(self):
+        return self.__data_class
 
     @property
     def subscribers(self):
@@ -275,6 +275,7 @@ class Service:
     def __init__(self, name):
         self.__name = name
         self.__type = rostopic.get_topic_type(name)[0]
+        self.__data_class = roslib.message.get_service_class(name if name[0] != '/' else name[1:])
         self.__providers = dict()
         self.__graph = None
         self.__svg = None
@@ -295,6 +296,10 @@ class Service:
     @property
     def providers(self):
         return self.__providers
+
+    @property
+    def data_class(self):
+        return self.__data_class
 
     def clear(self):
         self.__providers.clear()

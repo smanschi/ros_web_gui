@@ -25,7 +25,7 @@
         <h2>Publish Message</h2>
         <button class="w3-button w3-border w3-padding-small w3-small w3-round-large" id="copy_from_above">Copy last Message</button> <button class="w3-button w3-border w3-padding-small w3-small w3-round-large" id="reset">Reset</button><br />
         <form action="{{ url }}" method="POST">
-            <textarea class="w3-input w3-codespan" style="display: inline-block" rows="20" name="msg_pub" id="msg_pub">{{ msg_template }}</textarea><br />
+            <textarea class="w3-input w3-codespan" style="display: inline-block; width: 600px; color: black" rows="20" name="msg_pub" id="msg_pub">{{ msg_template }}</textarea><br />
             <input type="submit" class="w3-button w3-border w3-padding-small w3-small w3-round-large" id="publish" value="Publish" />
         </form>
         <br />

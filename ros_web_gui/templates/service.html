@@ -1,13 +1,59 @@
 {% extends "base.html" %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ super() }}{% endblock %}
 {% block head %}
     {{ super() }}
 {% endblock %}
 {% block content %}
-<header class="w3-container">
-    <h2>{{ title }}</h2>
-</header>
-<div class="w3-container">
-    {{ content }}
-</div>
+    <header class="w3-container">
+        <h2>{{ title }}</h2>
+    </header>
+    <div class="w3-container">
+        <object data="{{ img_data }}" type="image/svg+xml"></object>
+        <h2>Request</h2>
+        <form action="{{ url }}" method="POST">
+            <textarea class="w3-input w3-codespan" style="display: inline-block; width: 600px; color: black" rows="5" name="request" id="request">{{ msg_template }}</textarea><br />
+            <input type="submit" class="w3-button w3-border w3-padding-small w3-small w3-round-large" id="send_request" value="Send" />
+        </form>
+        <h2>Response</h2>
+        <textarea class="w3-input w3-codespan" style="display: inline-block; width: 600px; color: black" rows="5" name="response" id="response" readonly></textarea><br />
+        <br />
+        <script type=text/javascript>
+            // Reload message
+            $(function() {
+                $('button#reload').bind('click', function() {
+                    console.log('Requesting JSON');
+                    $.getJSON('{{ url }}', {
+                        get: 'json'
+                    }, function(data) {
+                        console.log('Got JSON result');
+                        jQuery.each(data, function() {
+                            $('#' + this['id']).html(this['value']);
+                            if(this['id'] == 'msg') {
+                                hljs.highlightBlock($('#' + this['id']).get(0));
+                            }
+                        });
+                });
+                return false;
+                });
+            });
+
+            // Copy received message to "publish message" field
+            $(function() {
+                $('button#copy_from_above').bind('click', function() {
+                    val = $('code#msg').text();
+                    console.log('Copying message');
+                    $('textarea#msg_pub').val(val);
+                });
+            });
+
+            // Reset
+            orig_msg = $('textarea#msg_pub').val();
+            $(function() {
+                $('button#reset').bind('click', function() {
+                    console.log('Copying message');
+                    $('textarea#msg_pub').val(orig_msg);
+                });
+            });            
+        </script>
+    </div>
 {% endblock %}

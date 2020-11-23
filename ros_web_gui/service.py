@@ -60,9 +60,11 @@ def get_service_info(name):
         img_data = url + '?get=svg'
 
         # Return rendered template
-        return render_template('base_with_svg.html', title=f'Service {name}',
+        return render_template('service.html', title=f'Service {name}',
                                active_menu_item='service',
+                               url=url,
                                content=content,
+                               msg_template=service.type,
                                **menu.get_items(active_item=url),
                                img_data=img_data)
                                #img_data=img_stream)
