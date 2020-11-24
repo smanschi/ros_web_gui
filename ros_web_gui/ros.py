@@ -5,6 +5,7 @@ import roslib
 import rosnode
 import rosparam
 import rospy
+import rosservice
 import rostopic
 import socket
 import sys
@@ -274,8 +275,8 @@ class Node:
 class Service:
     def __init__(self, name):
         self.__name = name
-        self.__type = rostopic.get_topic_type(name)[0]
-        self.__data_class = roslib.message.get_service_class(name if name[0] != '/' else name[1:])
+        self.__type = rosservice.get_service_type(name)
+        self.__data_class = rosservice.get_service_class_by_name(name)
         self.__providers = dict()
         self.__graph = None
         self.__svg = None

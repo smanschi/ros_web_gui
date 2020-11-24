@@ -64,7 +64,7 @@ def get_service_info(name):
                                active_menu_item='service',
                                url=url,
                                content=content,
-                               msg_template=service.type,
+                               msg_template="", # service.data_class().request,
                                **menu.get_items(active_item=url),
                                img_data=img_data)
                                #img_data=img_stream)
