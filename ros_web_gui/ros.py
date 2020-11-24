@@ -308,6 +308,9 @@ class Service:
     def request_class(self):
         return self.__data_class_request
 
+    def call(self, args):
+        return rosservice.call_service(self.__name, args, self.__data_class)
+
     def clear(self):
         self.__providers.clear()
         self.__times['state'] = datetime.now()

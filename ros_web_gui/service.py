@@ -1,6 +1,7 @@
-from flask import Blueprint, Markup, Response, render_template, request, url_for
+from flask import Blueprint, Markup, Response, jsonify, render_template, request, url_for
 from . import menu
 from .ros import ros
+from .util import str_to_msg
 import rosservice
 import sys
 
@@ -25,19 +26,30 @@ def get_service_overview():
                             items=items,
                             **menu_items)   
 
-@bp.route('/<path:name>')
+@bp.route('/<path:name>', methods=['GET', 'POST'])
 def get_service_info(name):
-    # Check if a svg representation should be returned
-    generate_svg = request.args.get('get', '', type=str) == 'svg'
-
-    if not name.startswith('/'):
+    # Add slash to name
+    if name[0] != '/':
+        name_without_slash = name
         name = '/' + name
+    else:
+        name_without_slash = name[1:]        
 
     # Update ros api
     ros.update()
 
     # Get service
     service = ros.get_service(name)
+
+    # Handle post request
+    if request.method == 'POST':
+        print("Got service call request")
+        req_msg = request.form['request']
+        req = str_to_msg(req_msg, service.request_class)
+        return jsonify(service.call(req))
+
+    # Check if a svg representation should be returned
+    generate_svg = request.args.get('get', '', type=str) == 'svg'    
 
     if generate_svg is True:
         svg = service.svg()
@@ -56,7 +68,7 @@ def get_service_info(name):
         content = Markup(content.replace('\n', '<br/>'))
 
         # Link to svg
-        url = url_for('service.get_service_info', name=name)
+        url = url_for('service.get_service_info', name=name_without_slash)
         img_data = url + '?get=svg'
 
         # Return rendered template
