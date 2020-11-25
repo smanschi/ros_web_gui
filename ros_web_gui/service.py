@@ -45,8 +45,19 @@ def get_service_info(name):
     if request.method == 'POST':
         print("Got service call request")
         req_msg = request.form['request']
-        req = str_to_msg(req_msg, service.request_class)
-        return jsonify(service.call(req))
+        ret = {
+            'success': True,
+            'error_msg': None,
+            'response': None
+        }
+        try:
+            req = str_to_msg(req_msg, service.request_class)
+            res = service.call(req)
+            ret['response'] = str(res)
+        except Exception as e:
+            ret['success'] = False
+            ret['error_msg'] = str(e)
+        return jsonify(ret)
 
     # Check if a svg representation should be returned
     generate_svg = request.args.get('get', '', type=str) == 'svg'    

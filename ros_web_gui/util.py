@@ -53,6 +53,8 @@ def _dict_to_msg(data):
 
 def str_to_msg(data, cls):
     data_dict = yaml.safe_load(data)
+    if data_dict is None or isinstance(data_dict, str):
+        return cls()
     msg = _dict_to_msg(data_dict)
     obj = cls(**msg)
     return obj

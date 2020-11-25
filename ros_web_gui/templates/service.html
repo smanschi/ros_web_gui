@@ -37,6 +37,7 @@
                 });
             });
 
+            // Post request
             $(document).ready(function(){
                 $("form").submit(function(event){
                     // Stop form from submitting normally
@@ -47,8 +48,14 @@
                     
                     // Send the form data using post
                     $.post("{{ url }}", formValues, function(data){
-                        // Display the returned data in browser
-                        $("textarea#response").val(data);
+                        if(data['success'] == false)
+                        {
+                            alert('Service call failed:\n' + data['error_msg']);
+                        }
+                        else
+                        {
+                            $("textarea#response").val(data['response']);
+                        }
                     });
                 });
             }); 

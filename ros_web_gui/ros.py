@@ -86,6 +86,7 @@ class Topic():
             self.__ros_publisher.publish(msg)
         except Exception as e:
             rospy.loginfo(e)
+            raise e
 
     def graph(self):
         # Check if we can return an existing graph
@@ -278,7 +279,6 @@ class Service:
         self.__type = rosservice.get_service_type(name)
         self.__data_class = rosservice.get_service_class_by_name(name)
         self.__data_class_request = roslib.message.get_service_class(self.__type + 'Request')
-        self
         self.__providers = dict()
         self.__graph = None
         self.__svg = None
@@ -309,7 +309,11 @@ class Service:
         return self.__data_class_request
 
     def call(self, args):
-        return rosservice.call_service(self.__name, args, self.__data_class)
+        try:
+            return rospy.ServiceProxy(self.__name, self.__data_class)(args)
+        except Exception as e:
+            rospy.loginfo(e)
+            raise e
 
     def clear(self):
         self.__providers.clear()

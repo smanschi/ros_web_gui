@@ -47,7 +47,16 @@ def get_topic_info(name):
     # Handle post request
     if request.method == 'POST':
         msg_pub = request.form['msg_pub']
-        topic.publish(msg_pub)
+        response = {
+            'success': True,
+            'error_msg': None
+        }
+        try:
+            topic.publish(msg_pub)
+        except Exception as e:
+            response['success'] = False
+            response['error_msg'] = str(e)
+        return jsonify(response)
 
     # Return svg
     if mode == 'svg':
