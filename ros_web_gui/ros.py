@@ -18,13 +18,23 @@ class Topic():
     def __init__(self, name):
         super().__init__()
         self.__name = name
-        topic_type_info = rostopic.get_topic_type(name)
-        self.__type = topic_type_info[0]
-        self.__data_class = roslib.message.get_message_class(topic_type_info[0])
         self.__msg = None
         self.__msg_info = None
-        self.__ros_subscriber = rospy.Subscriber(name, self.__data_class, self.__onMessage)
-        self.__ros_publisher = rospy.Publisher(name, self.__data_class, queue_size=1)
+        try:
+            topic_type_info = rostopic.get_topic_type(name)
+            self.__type = topic_type_info[0]
+        except Exception as e:
+            rospy.logerr(str(e))
+            self.type = None
+        try:
+            self.__data_class = roslib.message.get_message_class(topic_type_info[0])
+            self.__ros_subscriber = rospy.Subscriber(name, self.__data_class, self.__onMessage)
+            self.__ros_publisher = rospy.Publisher(name, self.__data_class, queue_size=1)
+        except Exception as e:
+            rospy.logerr(str(e))
+            self.__data_class = None
+            self.__ros_subscriber = None
+            self.__ros_publisher = None
         self.__subs = dict()
         self.__pubs = dict()
         self.__graph = None
@@ -276,9 +286,15 @@ class Node:
 class Service:
     def __init__(self, name):
         self.__name = name
-        self.__type = rosservice.get_service_type(name)
-        self.__data_class = rosservice.get_service_class_by_name(name)
-        self.__data_class_request = roslib.message.get_service_class(self.__type + 'Request')
+        try:
+            self.__type = rosservice.get_service_type(name)
+            self.__data_class = rosservice.get_service_class_by_name(name)
+            self.__data_class_request = roslib.message.get_service_class(self.__type + 'Request')
+        except Exception as e:
+            rospy.logerr(str(e))
+            self.__type = None
+            self.__data_class = None
+            self.__data_class_request = None
         self.__providers = dict()
         self.__graph = None
         self.__svg = None
@@ -507,7 +523,7 @@ class ROSApi(metaclass=Singleton):
             print('Resetting nodes and services')
             self.__times['state'] = datetime.now()
             
-            # Topics will not be removed to avoid killing the topic subscribers
+            # Topics are not deleted so that we don't loose the message statistics
             self.__nodes.clear()
             self.__services.clear()
             for _, topic in self.__topics.items():
