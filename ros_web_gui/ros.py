@@ -521,13 +521,17 @@ class ROSApi(metaclass=Singleton):
         if state is None or state != self.__system_state:
             # Clear state
             print('Resetting nodes and services')
+            rospy.init_node('ros_web_gui')
             self.__times['state'] = datetime.now()
             
             # Topics are not deleted so that we don't loose the message statistics
             self.__nodes.clear()
             self.__services.clear()
-            for _, topic in self.__topics.items():
-                topic.clear()
+            #for _, topic in self.__topics.items():
+                #topic.clear()
+            remove = [topic_name for topic_name in self.__topics]
+            for topic_name in remove: del self.__topics[topic_name]
+            self.__topics.clear()
 
             # Iterate over publisher topics and create nodes and topics if necessary
             for s in state[0]:

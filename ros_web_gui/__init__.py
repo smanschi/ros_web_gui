@@ -30,7 +30,6 @@ def create_app(test_config=None):
             print(exc)
 
     # Instantiate ROS api
-    rospy.init_node('ros_web_gui')
     if 'blacklisted_nodes' not in config:
         config['blacklisted_nodes'] = ['ros_web_gui']
     else:
