@@ -23,5 +23,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    scripts=['scripts/ros_web_gui']
+    scripts=['scripts/ros_web_gui'],
+    package_data={'ros_web_gui': ['*', 'static/*', 'templates/*']},
+    include_package_data=True,
 )

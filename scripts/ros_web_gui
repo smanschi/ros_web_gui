@@ -6,12 +6,12 @@ import yaml
 
 if __name__ == "__main__":
     # Read config file
-    config_file = pkg_resources.resource_filename('ros_web_gui', 'config/config.yaml')
+    config_file = pkg_resources.resource_filename('ros_web_gui', 'config.yaml')
     with open(config_file, 'r') as stream:
         try:
             config = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 
-    flask_app = create_app(config)
+    flask_app = create_app(config=config)
     flask_app.run()

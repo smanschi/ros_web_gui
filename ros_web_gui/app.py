@@ -2,13 +2,14 @@ from flask import Flask, Markup, Response, render_template, url_for
 from . import menu, node, service, topic, param
 from .ros import ros
 
-def create_app(test_config=None):
+def create_app(config=None):
     import pygraphviz as pgv
     import os
     import rospy
     import signal
     import socket
     import sys
+    import yaml
     from . import menu
     from .ros import ros
     from io import BytesIO
@@ -20,11 +21,17 @@ def create_app(test_config=None):
 
     signal.signal(signal.SIGINT, signal_handler)
 
+    # Read config file
+    if config is None:
+        config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
+        with open(config_file, 'r') as stream:
+            try:
+                config = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+
     # Instantiate ROS api
     rospy.init_node('ros_web_gui')
-    if config is None:
-        config = {'blacklisted_nodes': ['ros_web_gui']}
-        
     if 'blacklisted_nodes' not in config:
         config['blacklisted_nodes'] = ['ros_web_gui']
     else:
