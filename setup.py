@@ -1,11 +1,15 @@
+import re
 import setuptools
+
+with open("ros_web_gui/__init__.py", encoding="utf8") as f:
+    version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="ros_web_gui",
-    version="0.0.1",
+    version=version,
     author="Simon Manschitz",
     author_email="simon.manschitz@gmx.de",
     description="A web gui for ROS (robot operating system)",
@@ -19,5 +23,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    scripts=['scripts/ros_web_gui'],
+    scripts=['scripts/ros_web_gui']
 )
