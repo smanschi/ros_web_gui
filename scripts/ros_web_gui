@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 from ros_web_gui.app import create_app
+import argparse
 import os
 import pkg_resources
 import yaml
 
 if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser(description='Process some integers.')
+    arg_parser.add_argument('-c', '--config',
+                        help='Specify configuration file',
+                        default=pkg_resources.resource_filename('ros_web_gui', 'config.yaml'))
+    arg_parser.add_argument('-p', '--port', type=int, help='Webserver port', default=5000)
+    args = arg_parser.parse_args()
+
     # Read config file
-    config_file = pkg_resources.resource_filename('ros_web_gui', 'config.yaml')
-    with open(config_file, 'r') as stream:
+    with open(args.config, 'r') as stream:
         try:
             config = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 
     flask_app = create_app(config=config)
-    flask_app.run()
+    flask_app.run(port=args.port)
