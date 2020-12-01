@@ -31,5 +31,5 @@ After this, you should be ready to use the ros_web_gui.
 When ros_web_gui was installed via pip, you can simply type `ros_web_gui` in the terminal.
 When you checked out the repository you can run `scripts/run_flask.sh`. Then, go to your browser and open http://localhost:5000.
 
-For trying out ros_web_gui, you can also run the scripts/run_ros.sh script which will
+For trying out ros_web_gui, you can also run the `scripts/run_ros.sh` script which will
 start a roscore together with a simple publisher and a subscriber for testing purposes.
