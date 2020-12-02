@@ -17,6 +17,7 @@ from .util import get_object_size, str_to_msg
 class Topic():
     def __init__(self, name):
         super().__init__()
+        rospy.loginfo(f"Instantiating topic with name {name}")
         self.__name = name
         self.__msg = None
         self.__msg_info = None
@@ -82,6 +83,12 @@ class Topic():
         self.__subs.clear()
         self.__times['state'] = datetime.now()
 
+    def unregister(self):
+        if self.__ros_subscriber is not None:
+            self.__ros_subscriber.unregister()
+        if self.__ros_publisher is not None:
+            self.__ros_publisher.unregister()
+
     def addPublisher(self, node):
         self.__pubs[node.name] = node
         self.__times['state'] = datetime.now()
@@ -104,7 +111,7 @@ class Topic():
             return self.__graph
 
         # Remember time
-        print(f'Generating graph for topic {self.__name}')
+        rospy.loginfo(f'Generating graph for topic {self.__name}')
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
@@ -138,7 +145,7 @@ class Topic():
             return self.__svg
 
         # Remember time
-        print(f'Generating svg for topic {self.__name}')
+        rospy.loginfo(f'Generating svg for topic {self.__name}')
         self.__times['svg'] = datetime.now()
 
         # Generate svg
@@ -215,7 +222,7 @@ class Node:
             return self.__graph
 
         # Remember time
-        print(f'Generating graph for node {self.__name}')
+        rospy.loginfo(f'Generating graph for node {self.__name}')
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
@@ -269,7 +276,7 @@ class Node:
             return self.__svg
 
         # Remember time
-        print(f'Generating svg for node {self.__name}')
+        rospy.loginfo(f'Generating svg for node {self.__name}')
         self.__times['svg'] = datetime.now()
 
         # Generate svg
@@ -345,7 +352,7 @@ class Service:
             return self.__graph
 
         # Remember time
-        print(f'Generating graph for service {self.__name}')
+        rospy.loginfo(f'Generating graph for service {self.__name}')
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
@@ -371,7 +378,7 @@ class Service:
             return self.__svg
 
         # Remember time
-        print(f'Generating svg for node {self.__name}')
+        rospy.loginfo(f'Generating svg for node {self.__name}')
         self.__times['svg'] = datetime.now()
 
         # Generate svg
@@ -395,7 +402,7 @@ class Singleton(type):
 
 class ROSApi(metaclass=Singleton):
     def __init__(self):
-        print("Instance created")
+        rospy.loginfo("Instance created")
         self.__system_state = None
         self.__nodes = dict()
         self.__topics = dict()
@@ -405,6 +412,7 @@ class ROSApi(metaclass=Singleton):
         self.__blacklisted_nodes = set()
         self.__graph = None
         self.__svg = None
+        self.__master_pid = None
         self.__times = {
             'state': datetime.now(),
             'graph': None,
@@ -437,7 +445,7 @@ class ROSApi(metaclass=Singleton):
             return self.__graph
 
         # Remember time
-        print(f'Generating overview graph')
+        rospy.loginfo(f'Generating overview graph')
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
@@ -472,7 +480,7 @@ class ROSApi(metaclass=Singleton):
             return self.__svg
 
         # Remember time
-        print(f'Generating overview svg')
+        rospy.loginfo(f'Generating overview svg')
         self.__times['svg'] = datetime.now()
 
         # Generate svg
@@ -508,26 +516,38 @@ class ROSApi(metaclass=Singleton):
 
         # go through the master system state first
         try:
+            pid = master.getPid()
             state = master.getSystemState()
         except socket.error:
+            pid = None
             raise rosnode.ROSNodeIOException("Unable to communicate with master!")
         
         try:
             param_names = rosparam.list_params('')
         except rosparam.RosParamIOException:
-            print('Could not fetch parameter names from server', file=sys.stdout)
+            rospy.loginfo('Could not fetch parameter names from server')
         self.__params = sorted(set(['/'.join(param.split('/')[:2]) for param in param_names]))
 
-        if state is None or state != self.__system_state:
+        if state is None or state != self.__system_state or pid != self.__master_pid:
             # Clear state
-            print('Resetting nodes and services')
+            rospy.loginfo('Resetting nodes and services')
             self.__times['state'] = datetime.now()
             
             # Topics are not deleted so that we don't loose the message statistics
             self.__nodes.clear()
             self.__services.clear()
-            for _, topic in self.__topics.items():
-                topic.clear()
+            if pid != self.__master_pid:
+                rospy.loginfo("Resetting topics since roscore PID has changed")
+                self.__master_pid = pid
+                topic_names = []
+                for name, topic in self.__topics.items():
+                    topic_names.append(name)
+                    topic.unregister()
+                for name in topic_names:
+                    del self.__topics[name]
+            else:    
+                for _, topic in self.__topics.items():
+                    topic.clear()
 
             # Iterate over publisher topics and create nodes and topics if necessary
             for s in state[0]:
