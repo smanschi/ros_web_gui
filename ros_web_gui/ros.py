@@ -1,3 +1,4 @@
+import genpy
 import pygraphviz as pgv
 import roscpp
 import rosgraph
@@ -157,6 +158,9 @@ class Topic():
         # Store and return svg
         self.__svg = svg
         return svg
+
+    def msg_template(self):
+        return genpy.message.strify_message(self.__data_class())
 
     def __onMessage(self, msg):
         if self.__msg_info is None:

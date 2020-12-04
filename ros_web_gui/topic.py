@@ -103,7 +103,7 @@ def get_topic_info(name):
                                url=url,
                                msg_items=msg_data,
                                msg=None if msg is None else msg['msg'],
-                               msg_template=topic.data_class(),
+                               msg_template=topic.msg_template(),
                                content=content,
                                **menu.get_items(active_item=url),
                                img_data=img_data)
