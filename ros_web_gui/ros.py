@@ -13,7 +13,7 @@ import sys
 from datetime import datetime
 from flask import Markup, url_for
 from io import BytesIO
-from .util import get_object_size, str_to_msg
+from .util import get_object_size, str_to_msg, initialize_msg
 
 class Topic():
     def __init__(self, name):
@@ -30,6 +30,7 @@ class Topic():
             self.type = None
         try:
             self.__data_class = roslib.message.get_message_class(topic_type_info[0])
+            self.__msg_template = initialize_msg(self.__data_class())
             self.__ros_subscriber = rospy.Subscriber(name, self.__data_class, self.__onMessage)
             self.__ros_publisher = rospy.Publisher(name, self.__data_class, queue_size=1)
         except Exception as e:
@@ -160,7 +161,7 @@ class Topic():
         return svg
 
     def msg_template(self):
-        return genpy.message.strify_message(self.__data_class())
+        return genpy.message.strify_message(self.__msg_template)
 
     def __onMessage(self, msg):
         if self.__msg_info is None:

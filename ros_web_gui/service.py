@@ -1,7 +1,7 @@
 from flask import Blueprint, Markup, Response, jsonify, render_template, request, url_for
 from . import menu
 from .ros import ros
-from .util import str_to_msg
+from .util import str_to_msg, initialize_msg
 import rosservice
 import sys
 
@@ -87,7 +87,7 @@ def get_service_info(name):
                                active_menu_item='service',
                                url=url,
                                content=content,
-                               msg_template=service.request_class(),
+                               msg_template=initialize_msg(service.request_class()),
                                **menu.get_items(active_item=url),
                                img_data=img_data)
                                #img_data=img_stream)

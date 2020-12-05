@@ -1,3 +1,4 @@
+import roslib
 import rospy
 import sys
 import yaml
@@ -58,3 +59,37 @@ def str_to_msg(data, cls):
     msg = _dict_to_msg(data_dict)
     obj = cls(**msg)
     return obj
+
+def initialize_msg(msg):
+    primitives = {
+        "bool": False,
+        "int8": 0,
+        "uint8": 0,
+        "int16": 0,
+        "uint16": 0,
+        "int32": 0,
+        "uint32": 0,
+        "int64": 0,
+        "uint64": 0,
+        "float32": 0.0,
+        "float64": 0.0,
+        "string": "",
+        #"time": rospy.Time.now(),
+        #"duration": rospy.Duration()
+    }
+    
+    for idx, name in enumerate(msg.__slots__):
+        msg_type = msg._slot_types[idx]
+        if msg_type.endswith('[]'):
+            msg_type = msg_type[:-2]
+            if msg_type in primitives:
+                setattr(msg, name, [primitives[msg_type]])
+            else:
+                msg_class = roslib.message.get_message_class(msg_type[:-2])
+                setattr(msg, name, [initialize_msg(msg_class())])
+        elif msg_type in primitives:
+            setattr(msg, name, primitives[msg_type])
+        else:
+            msg_class = roslib.message.get_message_class(msg_type)
+            setattr(msg, name, initialize_msg(msg_class()))
+    return msg
