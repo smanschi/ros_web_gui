@@ -4,6 +4,19 @@ calls in a web browser. It provides much of the functionality that is also avail
 the ROS command line tools and rqt_graph, but with a graphical user interface. When running
 the ros_web_gui, a flask-based webserver will be started that can be accessed on port 5000.
 
+<table>
+  <tr>
+    <td><img src="doc/screenshots/01_graph.png" width="200" /></td>
+    <td><img src="doc/screenshots/02_nodes.png" width="200" /></td>
+    <td><img src="doc/screenshots/03_node.png" width="200" /></td>
+  </tr>
+  <tr>
+    <td><img src="doc/screenshots/04_parameters.png" width="200" /></td>
+    <td><img src="doc/screenshots/05_topic.png" width="200" /></td>
+    <td><img src="doc/screenshots/06_topic.png" width="200" /></td>
+  </tr>
+</table>
+
 # Installation
 First, you should install ros on your machine. It is heavily recommened to use Ubuntu 20.04
 or higher as ros-noetic is the first version with support for python3.
