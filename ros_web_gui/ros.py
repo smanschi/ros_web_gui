@@ -184,6 +184,8 @@ class Node:
         self.__name = name
         self.__subs = dict()
         self.__pubs = dict()
+        master = rosgraph.Master(name)
+        self.__uri = master.lookupNode(name)
         self.__srvs = dict()
         self.__graph = None
         self.__svg = None
@@ -208,6 +210,10 @@ class Node:
     @property
     def services(self):
         return self.__srvs
+
+    @property
+    def uri(self):
+        return self.__uri
 
     def addSubscription(self, sub):
         self.__subs[sub.name] = sub
@@ -234,7 +240,8 @@ class Node:
         graph = pgv.AGraph(directed=True, forcelabels=True, stylesheet='https://www.w3schools.com/w3css/4/w3.css')
 
         # Add node
-        graph.add_node(self.__name, **{'shape': 'oval', 'class': 'w3-orange w3-hover-red'})
+        node_label = f"{self.__name}\\n{self.__uri}"
+        graph.add_node(self.__name, label=node_label, **{'shape': 'oval', 'class': 'w3-orange w3-hover-red'})
 
         # Add topics to which the node subscribes
         node_names = set()
@@ -249,7 +256,8 @@ class Node:
                 subnode_id = 'pub_' + pub_name
                 if pub_name not in node_names:
                     subnode_url = url_for('node.get_node_info', name=pub_name)
-                    graph.add_node(subnode_id, label=pub_name, shape='oval', URL=subnode_url, target='_top')
+                    node_label = f"{pub_name}\\n{topic.publishers[pub_name].uri}"
+                    graph.add_node(subnode_id, label=node_label, shape='oval', URL=subnode_url, target='_top')
                     node_names.add(pub_name)
                 graph.add_edge(subnode_id, topic_id)
 
@@ -266,7 +274,8 @@ class Node:
                 subnode_id = 'sub_' + sub_name
                 if sub_name not in node_names:
                     subnode_url = url_for('node.get_node_info', name=sub_name)
-                    graph.add_node(subnode_id, label=sub_name, shape='oval', URL=subnode_url, target='_top')
+                    node_label = f"{sub_name}\\n{topic.subscribers[sub_name].uri}"
+                    graph.add_node(subnode_id, label=node_label, shape='oval', URL=subnode_url, target='_top')
                     node_names.add(sub_name)
                 graph.add_edge(topic_id, subnode_id)
 
