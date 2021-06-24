@@ -29,6 +29,6 @@ setuptools.setup(
     install_requires=[
         'Flask>=1.1.2',
         'PyYAML>=5.3.1',
-        'pygraphviz>=1.3'
+        'pydot>=1.4.2'
     ]
 )

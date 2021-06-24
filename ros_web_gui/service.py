@@ -2,8 +2,6 @@ from flask import Blueprint, Markup, Response, jsonify, render_template, request
 from . import menu
 from .ros import ros
 from .util import str_to_msg, initialize_msg
-import rosservice
-import sys
 
 bp = Blueprint('service', __name__, url_prefix='/service')
 

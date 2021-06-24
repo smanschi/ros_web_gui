@@ -1,7 +1,6 @@
 from flask import Blueprint, Markup, Response, render_template, request, url_for
 from . import menu, param
 from .ros import *
-import sys
 
 bp = Blueprint('node', __name__, url_prefix='/node')
 

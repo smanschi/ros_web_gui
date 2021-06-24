@@ -1,18 +1,14 @@
-from flask import Flask, Markup, Response, render_template, url_for
-from . import menu, node, service, topic, param
-from .ros import ros
+from flask import Flask, Response, render_template
+from . import node, service, topic, param
 
 def create_app(config=None):
-    import pygraphviz as pgv
     import os
     import rospy
     import signal
-    import socket
     import sys
     import yaml
     from . import menu
     from .ros import ros
-    from io import BytesIO
 
     # Signal handler (don't know why this is needed)
     def signal_handler(sig, frame):

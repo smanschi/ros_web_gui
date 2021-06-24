@@ -1,9 +1,6 @@
 from flask import Blueprint, Markup, Response, jsonify, render_template, request, url_for
 from . import menu
 from .ros import ros
-from io import BytesIO
-import pygraphviz as pgv
-import rosgraph
 
 bp = Blueprint('topic', __name__, url_prefix='/topic')
 

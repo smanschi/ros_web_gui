@@ -1,6 +1,5 @@
 import genpy
-import pygraphviz as pgv
-import roscpp
+import pydot
 import rosgraph
 import roslib
 import rosnode
@@ -9,11 +8,22 @@ import rospy
 import rosservice
 import rostopic
 import socket
-import sys
 from datetime import datetime
 from flask import Markup, url_for
 from io import BytesIO
 from .util import get_object_size, str_to_msg, initialize_msg
+
+
+def graph_to_svg(graph):
+    img_str = graph.create_svg(prog='dot')
+    sio = BytesIO()
+    sio.write(img_str)
+    sio.seek(0)
+    svg = sio.getvalue().decode('utf-8')
+    #svg = svg.replace('xlink:', '')
+    svg = Markup(svg.replace('xlink:', '').replace('w3&#45;', 'w3-').replace('hover&#45;', 'hover-'))
+    return svg
+
 
 class Topic():
     def __init__(self, name):
@@ -117,24 +127,24 @@ class Topic():
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
-        graph = pgv.AGraph(directed=True, forcelabels=True)
+        graph = pydot.Dot(graph_type='digraph', forcelabels=True)
         topic_id = 'topic_' + self.__name
         topic_label = f"{self.__name}\\n{self.__type}"
-        graph.add_node(topic_id, label=topic_label, shape='box')
+        graph.add_node(pydot.Node(topic_id, label=topic_label, shape='box'))
 
         # Add publishers
         for node_name in self.__pubs:
             node_id = 'pub_' + node_name
             node_url = url_for('node.get_node_info', name=node_name)
-            graph.add_node(node_id, label=node_name, shape='oval', URL=node_url, target='_top')
-            graph.add_edge(node_id, topic_id)
+            graph.add_node(pydot.Node(node_id, label=node_name, shape='oval', URL=node_url, target='_top'))
+            graph.add_edge(pydot.Edge(node_id, topic_id))
 
         # Add subscribers
         for node_name in self.__subs:
             node_id = 'sub_' + node_name
             node_url = url_for('node.get_node_info', name=node_name)
-            graph.add_node(node_id, label=node_name, shape='oval', URL=node_url, target='_top')
-            graph.add_edge(topic_id, node_id)
+            graph.add_node(pydot.Node(node_id, label=node_name, shape='oval', URL=node_url, target='_top'))
+            graph.add_edge(pydot.Node(topic_id, node_id))
 
         # Store and return graph
         self.__graph = graph
@@ -150,15 +160,9 @@ class Topic():
         rospy.loginfo(f'Generating svg for topic {self.__name}')
         self.__times['svg'] = datetime.now()
 
-        # Generate svg
-        img_stream = BytesIO()
-        graph.draw(path=img_stream, format='svg', prog='dot')
-        svg = img_stream.getvalue().decode('utf-8')
-        svg = svg.replace('xlink:', '')
-
         # Store and return svg
-        self.__svg = svg
-        return svg
+        self.__svg = graph_to_svg(graph)
+        return self.__svg
 
     def msg_template(self):
         return genpy.message.strify_message(self.__msg_template)
@@ -237,11 +241,11 @@ class Node:
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
-        graph = pgv.AGraph(directed=True, forcelabels=True, stylesheet='https://www.w3schools.com/w3css/4/w3.css')
+        graph = pydot.Dot(graph_type='digraph', forcelabels=True, stylesheet='https://www.w3schools.com/w3css/4/w3.css')
 
         # Add node
         node_label = f"{self.__name}\\n{self.__uri}"
-        graph.add_node(self.__name, label=node_label, **{'shape': 'oval', 'class': 'w3-orange w3-hover-red'})
+        graph.add_node(pydot.Node(self.__name, label=node_label, **{'shape': 'oval', 'class': 'w3-orange w3-hover-red'}))
 
         # Add topics to which the node subscribes
         node_names = set()
@@ -249,17 +253,17 @@ class Node:
             topic_id = 'topic_sub_' + topic_name
             node_url = url_for('topic.get_topic_info', name=topic_name)
             node_label = f"{topic_name}\\n{topic.type}"
-            graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
-            graph.add_edge(topic_id, self.__name)
+            graph.add_node(pydot.Node(topic_id, label=node_label, shape='box', URL=node_url, target='_top'))
+            graph.add_edge(pydot.Edge(topic_id, self.__name))
 
             for pub_name in topic.publishers:
                 subnode_id = 'pub_' + pub_name
                 if pub_name not in node_names:
                     subnode_url = url_for('node.get_node_info', name=pub_name)
                     node_label = f"{pub_name}\\n{topic.publishers[pub_name].uri}"
-                    graph.add_node(subnode_id, label=node_label, shape='oval', URL=subnode_url, target='_top')
+                    graph.add_node(pydot.Node(subnode_id, label=node_label, shape='oval', URL=subnode_url, target='_top'))
                     node_names.add(pub_name)
-                graph.add_edge(subnode_id, topic_id)
+                graph.add_edge(pydot.Edge(subnode_id, topic_id))
 
         # Add topics which the node publishes
         node_names.clear()
@@ -267,17 +271,17 @@ class Node:
             topic_id = 'topic_pub_' + topic_name
             node_url = url_for('topic.get_topic_info', name=topic_name)
             node_label = f"{topic_name}\\n{topic.type}"
-            graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
-            graph.add_edge(self.__name, topic_id)
+            graph.add_node(pydot.Node(topic_id, label=node_label, shape='box', URL=node_url, target='_top'))
+            graph.add_edge(pydot.Edge(self.__name, topic_id))
 
             for sub_name in topic.subscribers:
                 subnode_id = 'sub_' + sub_name
                 if sub_name not in node_names:
                     subnode_url = url_for('node.get_node_info', name=sub_name)
                     node_label = f"{sub_name}\\n{topic.subscribers[sub_name].uri}"
-                    graph.add_node(subnode_id, label=node_label, shape='oval', URL=subnode_url, target='_top')
+                    graph.add_node(pydot.Node(subnode_id, label=node_label, shape='oval', URL=subnode_url, target='_top'))
                     node_names.add(sub_name)
-                graph.add_edge(topic_id, subnode_id)
+                graph.add_edge(pydot.Edge(topic_id, subnode_id))
 
         # Store and return graph
         self.__graph = graph
@@ -293,15 +297,9 @@ class Node:
         rospy.loginfo(f'Generating svg for node {self.__name}')
         self.__times['svg'] = datetime.now()
 
-        # Generate svg
-        img_stream = BytesIO()
-        graph.draw(path=img_stream, format='svg', prog='dot')
-        svg = img_stream.getvalue().decode('utf-8')
-        svg = Markup(svg.replace('xlink:', '').replace('w3&#45;', 'w3-').replace('hover&#45;', 'hover-'))
-
         # Store and return svg
-        self.__svg = svg
-        return svg
+        self.__svg = graph_to_svg(graph)
+        return self.__svg
 
 
 class Service:
@@ -370,16 +368,16 @@ class Service:
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
-        graph = pgv.AGraph(directed=True, forcelabels=True, stylesheet='https://www.w3schools.com/w3css/4/w3.css')
+        graph = pydot.Dot(graph_type='digraph', forcelabels=True, stylesheet='https://www.w3schools.com/w3css/4/w3.css')
         
         node_label = f"{self.__name}\\n{self.__type}"
         node_id = "srv_" + self.__name
-        graph.add_node(node_id, label=node_label, shape='box')
+        graph.add_node(pydot.Node(node_id, label=node_label, shape='box'))
 
         for _, node in self.__providers.items():
             node_url = url_for('node.get_node_info', name=node.name)
-            graph.add_node(node.name, shape='oval', URL=node_url, target='_top')
-            graph.add_edge(node.name, node_id)
+            graph.add_node(pydot.Node(node.name, shape='oval', URL=node_url, target='_top'))
+            graph.add_edge(pydot.Edge(node.name, node_id))
 
         # Store and return graph
         self.__graph = graph
@@ -395,15 +393,9 @@ class Service:
         rospy.loginfo(f'Generating svg for node {self.__name}')
         self.__times['svg'] = datetime.now()
 
-        # Generate svg
-        img_stream = BytesIO()
-        graph.draw(path=img_stream, format='svg', prog='dot')
-        svg = img_stream.getvalue().decode('utf-8')
-        svg = Markup(svg.replace('xlink:', '').replace('w3&#45;', 'w3-').replace('hover&#45;', 'hover-'))
-
         # Store and return svg
-        self.__svg = svg
-        return svg
+        self.__svg = graph_to_svg(graph)
+        return self.__svg
 
 
 class Singleton(type):
@@ -463,25 +455,25 @@ class ROSApi(metaclass=Singleton):
         self.__times['graph'] = datetime.now()
 
         # Generate new graph
-        graph = pgv.AGraph(directed=True, forcelabels=True)
+        graph = pydot.Dot(graph_type='digraph', forcelabels=True)
 
         # Add one graph node for each ros node
         for node_name in ros.nodes:
             node_url = url_for('node.get_node_info', name=node_name)
-            graph.add_node(node_name, shape='oval', URL=node_url, target='_top')
+            graph.add_node(pydot.Node(node_name, shape='oval', URL=node_url, target='_top'))
             
         # Iterate over topics, add a graph node for each topic and draw edges to subscribers and publishers
         for topic_name, topic in ros.topics.items():
             topic_id = 'topic_' + topic_name
             node_url = url_for('topic.get_topic_info', name=topic_name)
             node_label = f"{topic_name}\\n{topic.type}"
-            graph.add_node(topic_id, label=node_label, shape='box', URL=node_url, target='_top')
+            graph.add_node(pydot.Node(topic_id, label=node_label, shape='box', URL=node_url, target='_top'))
 
             for node_name in topic.publishers:
-                graph.add_edge(node_name, topic_id)
+                graph.add_edge(pydot.Edge(node_name, topic_id))
 
             for node_name in topic.subscribers:
-                graph.add_edge(topic_id, node_name)
+                graph.add_edge(pydot.Edge(topic_id, node_name))
 
         # Store and return graph
         self.__graph = graph
@@ -497,15 +489,9 @@ class ROSApi(metaclass=Singleton):
         rospy.loginfo(f'Generating overview svg')
         self.__times['svg'] = datetime.now()
 
-        # Generate svg
-        img_stream = BytesIO()
-        graph.draw(path=img_stream, format='svg', prog='dot')
-        svg = img_stream.getvalue().decode('utf-8')
-        svg = Markup(svg.replace('xlink:', '').replace('w3&#45;', 'w3-').replace('hover&#45;', 'hover-'))
-
         # Store and return svg
-        self.__svg = svg
-        return svg
+        self.__svg = graph_to_svg(graph)
+        return self.__svg
 
     def get_topic(self, name):
         if name in self.__topics:

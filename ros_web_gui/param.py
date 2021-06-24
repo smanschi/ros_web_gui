@@ -1,15 +1,8 @@
-from flask import Blueprint, Markup, Response, escape, render_template, url_for
+from flask import Blueprint, Markup, escape, render_template, url_for
 from . import menu
 from .ros import ros
-import base64
-from io import BytesIO, StringIO
-import pygraphviz as pgv
 import rosgraph
 import rosparam
-import socket
-import sys
-import urllib
-import yaml
 
 bp = Blueprint('param', __name__, url_prefix='/param')
 
