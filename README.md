@@ -29,13 +29,13 @@ pip install ros_web_gui
 When using the package from Github, you need the python packages pygraphviz, pyyaml and flask. So you can set up a conda env or virtual environment with
 
 ```
-conda install flask pygraphviz pyyaml
+conda install flask pydot pyyaml rosdep
 ```
 
 OR
 
 ```
-pip install flask pygraphviz pyyaml
+pip install flask pydot pyyaml rosdep
 ```
 
 After this, you should be ready to use the ros_web_gui.
