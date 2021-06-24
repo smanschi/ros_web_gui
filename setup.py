@@ -29,6 +29,7 @@ setuptools.setup(
     install_requires=[
         'Flask>=1.1.2',
         'PyYAML>=5.3.1',
-        'pydot>=1.4.2'
+        'pydot>=1.4.2',
+        'rosdep>=0.20.1'
     ]
 )
