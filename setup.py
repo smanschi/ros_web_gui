@@ -25,7 +25,7 @@ setuptools.setup(
     python_requires='>=3.6',
     scripts=['scripts/ros_web_gui'],
     package_data={'ros_web_gui': ['*', 'static/*', 'templates/*']},
-    include_package_data=True,
+    include_package_data=False,
     install_requires=[
         'Flask>=1.1.2',
         'PyYAML>=5.3.1',
