@@ -144,7 +144,7 @@ class Topic():
             node_id = 'sub_' + node_name
             node_url = url_for('node.get_node_info', name=node_name)
             graph.add_node(pydot.Node(node_id, label=node_name, shape='oval', URL=node_url, target='_top'))
-            graph.add_edge(pydot.Node(topic_id, node_id))
+            graph.add_edge(pydot.Edge(topic_id, node_id))
 
         # Store and return graph
         self.__graph = graph

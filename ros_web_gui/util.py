@@ -1,3 +1,4 @@
+import re
 import roslib
 import rospy
 import sys
@@ -60,7 +61,7 @@ def str_to_msg(data, cls):
     obj = cls(**msg)
     return obj
 
-def initialize_msg(msg):
+def initialize_msg(msg):   
     primitives = {
         "bool": False,
         "int8": 0,
@@ -80,16 +81,26 @@ def initialize_msg(msg):
     
     for idx, name in enumerate(msg.__slots__):
         msg_type = msg._slot_types[idx]
-        if msg_type.endswith('[]'):
-            msg_type = msg_type[:-2]
+        
+        # Check if type is an array
+        pattern = '\[[0-9]*\]$'
+        match = re.search(pattern, msg_type)
+        
+        if match is not None:
+            num_ele = 1 if match.end()-match.start() == 2 else int(match.string[match.start()+1:match.end()-1])
+            msg_type = match.string[:match.start()]
             if msg_type in primitives:
-                setattr(msg, name, [primitives[msg_type]])
+                setattr(msg, name, [primitives[msg_type] for i in range(num_ele)])
             else:
-                msg_class = roslib.message.get_message_class(msg_type[:-2])
-                setattr(msg, name, [initialize_msg(msg_class())])
+                msg_class = roslib.message.get_message_class(msg_type)
+                if msg_class is None:
+                    rospy.logerr(f"Can't instantiate message class {msg_type}")
+                setattr(msg, name, [initialize_msg(msg_class()) for i in range(num_ele)])
         elif msg_type in primitives:
             setattr(msg, name, primitives[msg_type])
         else:
             msg_class = roslib.message.get_message_class(msg_type)
+            if msg_class is None:
+                    rospy.logerr(f"Can't instantiate message class {msg_type}")
             setattr(msg, name, initialize_msg(msg_class()))
     return msg
