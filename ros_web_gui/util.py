@@ -75,6 +75,8 @@ def initialize_msg(msg):
         "float32": 0.0,
         "float64": 0.0,
         "string": "",
+        "byte": 0,
+        "char": 0
         #"time": rospy.Time.now(),
         #"duration": rospy.Duration()
     }
